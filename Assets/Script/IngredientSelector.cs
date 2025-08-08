@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 public class IngredientSelector : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class IngredientSelector : MonoBehaviour
 
     private List<string> selectedIngredients = new List<string>();
 
+    private float totale = 0f;
+    public TextMeshProUGUI totaleText;
     public Menu menu; 
     public GameObject togglePrefab; // un prefab di un Toggle
     public Transform toggleParent; // il contenitore con Vertical Layout Group
@@ -18,7 +21,8 @@ public class IngredientSelector : MonoBehaviour
         foreach (var ingrediente in menu.ingredienti)
         {
             GameObject newToggle = Instantiate(togglePrefab, toggleParent);
-            newToggle.GetComponentInChildren<Text>().text = ingrediente.nome;
+            newToggle.GetComponentInChildren<ToggleIngredienti>().nome.text = ingrediente.nome;
+            newToggle.GetComponent<ToggleIngredienti>().prezzo.text = $"{ingrediente.prezzo:F2}€";
             ingredientToggles.Add(newToggle);
             // se vuoi collegare dati extra puoi fare:
             Toggle toggleComp = newToggle.GetComponent<Toggle>();
@@ -27,7 +31,13 @@ public class IngredientSelector : MonoBehaviour
                 if (isOn)
                 {
                     Debug.Log("Selezionato: " + ingrediente.nome);
-
+                    totale += ingrediente.prezzo;
+                    totaleText.text = $"{totale:F2}€";
+                }
+                else
+                {
+                    totale -= ingrediente.prezzo;
+                    totaleText.text = $"{totale:F2}€";
                 }
             });
         }
