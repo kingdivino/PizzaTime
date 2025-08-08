@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Mozzarella
   m_EditorClassIdentifier: 
-  id: 0
+  id: 1
   nome: Mozzarella
-  prezzo: 0
+  prezzo: 1
   quantita: 0

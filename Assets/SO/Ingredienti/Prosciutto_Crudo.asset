@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Prosciutto_Crudo
   m_EditorClassIdentifier: 
-  id: 0
-  nome: 
-  prezzo: 0
-  quantita: 0
+  id: 3
+  nome: Crudo
+  prezzo: 2
+  quantita: 5

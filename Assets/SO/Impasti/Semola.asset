@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Semola
   m_EditorClassIdentifier: 
   id: 0
-  nome: 
-  prezzo: 0
+  nome: Semola
+  prezzo: 1

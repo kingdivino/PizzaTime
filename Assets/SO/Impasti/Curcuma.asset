@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d732b38077c207f4f82d013aa66f4ab4, type: 3}
   m_Name: Curcuma
   m_EditorClassIdentifier: 
-  id: 0
-  nome: 
-  prezzo: 0
+  id: 2
+  nome: Curcuma
+  prezzo: 2
