@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 319ab1caacb04704aba1b1d0950c26ef, type: 3}
   m_Name: Menu
   m_EditorClassIdentifier: 
-  ingredienti: []
+  ingredienti:
+  - {fileID: 11400000, guid: 32e8d74202836474faf713adf2d5a71f, type: 2}
+  - {fileID: 11400000, guid: 330133f72847871469ce2e297279322f, type: 2}
