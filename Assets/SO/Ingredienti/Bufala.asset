@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Bufala
   m_EditorClassIdentifier: 
   id: 0
-  nome: 
+  nome: Bufala
   prezzo: 0
   quantita: 0

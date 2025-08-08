@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   nome: Mozzarella
-  prezzo: 0
-  quantita: 0
+  prezzo: 1
+  quantita: 10

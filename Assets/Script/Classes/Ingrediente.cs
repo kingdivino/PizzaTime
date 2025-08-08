@@ -19,6 +19,6 @@ public class Ingrediente : ScriptableObject
 
     public void sottraiQuantità(Ingrediente i)
     {
-        i.quantita = i.quantita--;
+        i.quantita--;
     }
 }
