@@ -17,6 +17,7 @@ public class IngredientSelector : MonoBehaviour
     public Menu menu;
     public GameObject togglePrefab; // prefab che contiene Toggle + ToggleIngredienti
     public Transform toggleParent; // contenitore con Vertical Layout Group
+    public PizzaBuilder pizzaVisual;
 
     // fallback guard (usato solo se non vuoi/puoi usare SetIsOnWithoutNotify)
     private bool suppressToggleCallbacks = false;
@@ -31,7 +32,7 @@ public class IngredientSelector : MonoBehaviour
 
         foreach (var ingrediente in menu.ingredienti)
         {
-            // IMPORTANT: copia locale per la closure
+            // copia locale per la closure
             var ingr = ingrediente;
 
             GameObject newToggle = Instantiate(togglePrefab, toggleParent);
@@ -58,14 +59,8 @@ public class IngredientSelector : MonoBehaviour
                 {
                     if (ingredientCount >= maxIngredients)
                     {
-                        // **Soluzione corretta:** disattiva il toggle senza richiamare il listener
-                        // Metodo preferito (disponibile nelle moderne versioni di Unity):
+                        // disattiva il toggle senza richiamare il listener
                         toggleComp.SetIsOnWithoutNotify(false);
-
-                        // Fallback alternative (se SetIsOnWithoutNotify non esiste):
-                        // suppressToggleCallbacks = true;
-                        // toggleComp.isOn = false;
-                        // suppressToggleCallbacks = false;
 
                         Debug.Log($"Hai raggiunto il massimo di {maxIngredients} ingredienti.");
                         return;
@@ -81,6 +76,7 @@ public class IngredientSelector : MonoBehaviour
                     //    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
                     //}
                     selectedIngredients.Add(ingr.nome);
+                    pizzaVisual.AddIngredient(ingrediente);
                     
                     ingredientCount++;
                     totale += ingr.prezzo;
@@ -101,6 +97,7 @@ public class IngredientSelector : MonoBehaviour
                     //    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
                     //}
                     selectedIngredients.Remove(ingr.nome);
+                    pizzaVisual.RemoveIngredient(ingrediente);
                     
                     ingredientCount = Mathf.Max(0, ingredientCount - 1);
                     totale -= ingr.prezzo;

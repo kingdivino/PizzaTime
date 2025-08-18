@@ -16,3 +16,6 @@ MonoBehaviour:
   nome: Salame
   prezzo: 1
   quantita: 5
+  sprite: {fileID: 1622315888534751301, guid: b34494efa1821f642a58412e60a839bb, type: 3}
+  layer: 4
+  singolo: 0

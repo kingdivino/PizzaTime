@@ -4,10 +4,14 @@ using UnityEngine;
 public class Menu : ScriptableObject
 {
     public Ingrediente[] ingredienti;
+    public Impasto[] impasti;
+    public Prodotto[] prodotti;
 
-    public Menu(Ingrediente[] ingredienti)
+    public Menu(Ingrediente[] ingredienti, Impasto[] impasti, Prodotto[] prodotti)
     {
         this.ingredienti = ingredienti;
+        this.impasti = impasti;
+        this.prodotti = prodotti;
     }
 }
 

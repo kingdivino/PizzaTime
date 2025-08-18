@@ -27,3 +27,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 330133f72847871469ce2e297279322f, type: 2}
   - {fileID: 11400000, guid: 330133f72847871469ce2e297279322f, type: 2}
   - {fileID: 11400000, guid: 330133f72847871469ce2e297279322f, type: 2}
+  impasti:
+  - {fileID: 11400000, guid: 0865e63ef69c751428328e8686fd0bd0, type: 2}
+  - {fileID: 11400000, guid: 72aeef396c1c40e4cbe0fe974ebd7a14, type: 2}
+  - {fileID: 11400000, guid: b130831b7da0cba489c83c44695a24ef, type: 2}
+  prodotti: []
