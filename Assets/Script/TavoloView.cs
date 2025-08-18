@@ -6,22 +6,25 @@ public class TavoloView : MonoBehaviour
 {
     public TextMeshProUGUI numeroTxt;
     public TextMeshProUGUI statoTxt;
-    public Button apriDettaglioBtn;
 
     Tavolo data;
+    TavoloDettaglioView dettaglioUI;
 
-    public void Bind(Tavolo tavolo)
+    public void Bind(Tavolo tavolo, TavoloDettaglioView dettaglio)
     {
         data = tavolo;
-        numeroTxt.text = $"Tavolo {data.id}";
-        statoTxt.text = data.disponibile
-            ? $"Libero • Posti: {data.numeroPosti}"
-            : $"Occupato • {data.postiOccupati}/{data.numeroPosti}";
+        dettaglioUI = dettaglio;
 
-        if (apriDettaglioBtn)
+        numeroTxt.text = $"Tavolo {data.id}";
+        statoTxt.text = data.disponibile 
+            ? $"Libero ({data.numeroPosti} posti)"
+            : $"Occupato {data.postiOccupati}/{data.numeroPosti}";
+
+        var btn = GetComponent<Button>();
+        if (btn != null)
         {
-            apriDettaglioBtn.onClick.RemoveAllListeners();
-            apriDettaglioBtn.onClick.AddListener(() => Debug.Log($"Dettaglio tavolo {data.id}"));
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => dettaglioUI.MostraDettaglio(data));
         }
     }
 }

@@ -14,6 +14,7 @@ public class Tavolo : ScriptableObject
     public Time timestampOrdinazione;
     public Prodotto[] prodottiOrdinati;
     public Pizza[] pizzeOrdinate;
+    public Sprite Table;
     
     public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate)
     {

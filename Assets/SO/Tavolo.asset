@@ -19,3 +19,4 @@ MonoBehaviour:
   postiOccupati: 0
   prodottiOrdinati: []
   pizzeOrdinate: []
+  Table: {fileID: -8841490917199087839, guid: 56be4e474f34f2248b09517df5c1da2e, type: 3}

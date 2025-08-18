@@ -2,20 +2,22 @@ using UnityEngine;
 
 public class SalaView : MonoBehaviour
 {
-    public RectTransform contenitoreTavoli; // metti QUI lo stesso SalaViewPanel
-    public GameObject tavoloPrefab;         // il prefab TavoloView
+    public RectTransform contenitoreTavoli;
+    public GameObject tavoloPrefab;
+    public TavoloDettaglioView dettaglioUI; // ⬅️ collega qui il prefab istanziato in Canvas
 
     public void MostraSala(Sala sala)
     {
-        // pulisci
-        foreach (Transform c in contenitoreTavoli) Destroy(c.gameObject);
+        foreach (Transform c in contenitoreTavoli)
+            Destroy(c.gameObject);
+
         if (sala == null || sala.tavoli == null) return;
 
-        // istanzia
         foreach (var t in sala.tavoli)
         {
             var go = Instantiate(tavoloPrefab, contenitoreTavoli);
-            go.GetComponent<TavoloView>().Bind(t);
+            var view = go.GetComponent<TavoloView>();
+            view.Bind(t, dettaglioUI);
         }
     }
 }

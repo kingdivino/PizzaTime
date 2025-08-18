@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Tavolo 2
   m_EditorClassIdentifier: 
   id: 2
-  nominativo: 
-  numeroPosti: 0
+  nominativo: sda
+  numeroPosti: 8
   disponibile: 0
-  postiOccupati: 0
+  postiOccupati: 5
   prodottiOrdinati: []
   pizzeOrdinate: []
+  Table: {fileID: 21300000, guid: 56be4e474f34f2248b09517df5c1da2e, type: 3}
