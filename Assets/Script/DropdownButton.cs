@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class DropdownButton : MonoBehaviour
 {
-    public GameObject ingredientList;
+    public GameObject objectList;
 
     public void ToggleMenu()
     {
-        ingredientList.SetActive(!ingredientList.activeSelf);
+        objectList.SetActive(!objectList.activeSelf);
     }
 }
 

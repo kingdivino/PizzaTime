@@ -1,67 +1,127 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 public class IngredientSelector : MonoBehaviour
 {
-    private List<GameObject> ingredientToggles = new List<GameObject>(); 
+    private List<GameObject> ingredientToggles = new List<GameObject>();
     public int maxIngredients = 8;
+    private int ingredientCount = 0;
 
-    private List<string> selectedIngredients = new List<string>();
+    // uso HashSet per evitare duplicati e ricerche costose
+    private HashSet<string> selectedIngredients = new HashSet<string>();
 
-    public Menu menu; 
-    public GameObject togglePrefab; // un prefab di un Toggle
-    public Transform toggleParent; // il contenitore con Vertical Layout Group
+    private float totale = 0f;
+    public TextMeshProUGUI totaleText;
+    public Menu menu;
+    public GameObject togglePrefab; // prefab che contiene Toggle + ToggleIngredienti
+    public Transform toggleParent; // contenitore con Vertical Layout Group
+
+    // fallback guard (usato solo se non vuoi/puoi usare SetIsOnWithoutNotify)
+    private bool suppressToggleCallbacks = false;
 
     void Start()
     {
+        if (menu == null || menu.ingredienti == null)
+        {
+            Debug.LogError("Menu o menu.ingredienti non assegnati.");
+            return;
+        }
+
         foreach (var ingrediente in menu.ingredienti)
         {
+            // IMPORTANT: copia locale per la closure
+            var ingr = ingrediente;
+
             GameObject newToggle = Instantiate(togglePrefab, toggleParent);
-            newToggle.GetComponentInChildren<Text>().text = ingrediente.nome;
+
+            // Se hai un componente che contiene i riferimenti UI, impostali
+            var toggleView = newToggle.GetComponentInChildren<ToggleIngredienti>();
+            if (toggleView != null)
+            {
+                toggleView.nome.text = ingr.nome;
+                toggleView.prezzo.text = $"{ingr.prezzo:F2}€";
+            }
+
             ingredientToggles.Add(newToggle);
-            // se vuoi collegare dati extra puoi fare:
+
             Toggle toggleComp = newToggle.GetComponent<Toggle>();
+            if (toggleComp == null) continue;
+
+            // Listener principale
             toggleComp.onValueChanged.AddListener(isOn =>
             {
+                if (suppressToggleCallbacks) return; // fallback guard
+
                 if (isOn)
                 {
-                    Debug.Log("Selezionato: " + ingrediente.nome);
+                    if (ingredientCount >= maxIngredients)
+                    {
+                        // **Soluzione corretta:** disattiva il toggle senza richiamare il listener
+                        // Metodo preferito (disponibile nelle moderne versioni di Unity):
+                        toggleComp.SetIsOnWithoutNotify(false);
 
+                        // Fallback alternative (se SetIsOnWithoutNotify non esiste):
+                        // suppressToggleCallbacks = true;
+                        // toggleComp.isOn = false;
+                        // suppressToggleCallbacks = false;
+
+                        Debug.Log($"Hai raggiunto il massimo di {maxIngredients} ingredienti.");
+                        return;
+                    }
+
+                    // aggiungo solo se non è già presente
+                    //if (selectedIngredients.Add(ingr.nome))
+                    //{
+                    //    ingredientCount++;
+                    //    totale += ingr.prezzo;
+                    //    totale = Mathf.Max(0f, totale);
+                    //    UpdateTotaleText();
+                    //    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
+                    //}
+                    selectedIngredients.Add(ingr.nome);
+                    
+                    ingredientCount++;
+                    totale += ingr.prezzo;
+                    totale = Mathf.Max(0f, totale);
+                    UpdateTotaleText();
+                    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
+                    
+                }
+                else // deselect
+                {
+                    // rimuovo solo se era stato realmente selezionato
+                    //if (selectedIngredients.Remove(ingr.nome))
+                    //{
+                    //    ingredientCount = Mathf.Max(0, ingredientCount - 1);
+                    //    totale -= ingr.prezzo;
+                    //    totale = Mathf.Max(0f, totale);
+                    //    UpdateTotaleText();
+                    //    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
+                    //}
+                    selectedIngredients.Remove(ingr.nome);
+                    
+                    ingredientCount = Mathf.Max(0, ingredientCount - 1);
+                    totale -= ingr.prezzo;
+                    totale = Mathf.Max(0f, totale);
+                    UpdateTotaleText();
+                    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
+                    
                 }
             });
         }
 
-        //foreach (var toggle in ingredientToggles)
-        //{
-        //    toggle.GetComponent<Toggle>().onValueChanged.AddListener(delegate { OnToggleChanged(toggle.GetComponent<Toggle>()); });
-        //}
+        UpdateTotaleText();
     }
 
-    void OnToggleChanged(Toggle changedToggle)
+    private void UpdateTotaleText()
     {
-        string ingredient = changedToggle.GetComponentInChildren<Text>().text;
-
-        if (changedToggle.isOn)
-        {
-            if (selectedIngredients.Count < maxIngredients)
-            {
-                selectedIngredients.Add(ingredient);
-            }
-            else
-            {
-                changedToggle.isOn = false; // blocco selezione
-            }
-        }
-        else
-        {
-            selectedIngredients.Remove(ingredient);
-        }
+        if (totaleText != null) totaleText.text = $"{totale:F2}€";
     }
 
     public List<string> GetSelectedIngredients()
     {
         return new List<string>(selectedIngredients);
     }
-
 }
