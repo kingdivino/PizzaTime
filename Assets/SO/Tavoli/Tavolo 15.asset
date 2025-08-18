@@ -9,10 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
-  m_Name: Olive
+  m_Script: {fileID: 11500000, guid: 5b820e73f19ec454fbf586e8f4897efa, type: 3}
+  m_Name: Tavolo 15
   m_EditorClassIdentifier: 
-  id: 2
-  nome: Olive
-  prezzo: 1
-  quantita: 4
+  id: 15
+  nominativo: 
+  numeroPosti: 2
+  disponibile: 0
+  postiOccupati: 0
+  prodottiOrdinati: []
+  pizzeOrdinate: []
