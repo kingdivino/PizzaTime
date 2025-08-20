@@ -6,10 +6,13 @@ public class ImpastoSelector : MonoBehaviour
 {
     [Header("Riferimenti dati")]
     public Menu menu;  // collega qui il tuo ScriptableObject "Menu" con dentro impasti
+    public Riepilogo riepilogo;
 
     [Header("UI")]
     public TMP_Dropdown dropdown;       // il dropdown nella UI
     public TextMeshProUGUI prezzoText;  // testo per mostrare il prezzo selezionato
+    private Sprite impastobaseSprite;
+    public SpriteRenderer impastobase;
 
     private Impasto impastoSelezionato;
 
@@ -21,14 +24,14 @@ public class ImpastoSelector : MonoBehaviour
             return;
         }
 
+        impastobaseSprite = impastobase.sprite;
+
         dropdown.ClearOptions();
 
         List<string> options = new List<string>();
 
-        // 👇 prima voce "placeholder"
         options.Add("Seleziona impasto");
 
-        // poi aggiungi gli impasti reali
         foreach (var impasto in menu.impasti)
         {
             options.Add(impasto.nome);
@@ -36,32 +39,35 @@ public class ImpastoSelector : MonoBehaviour
 
         dropdown.AddOptions(options);
 
-        // listener
         dropdown.onValueChanged.AddListener(OnImpastoChanged);
 
-        // imposta default sul placeholder
         dropdown.value = 0;
         prezzoText.text = ""; // nessun prezzo finché non scelgono
     }
 
     void OnImpastoChanged(int index)
     {
-        // 👇 se è la prima voce, non fare nulla
         if (index == 0)
         {
             impastoSelezionato = null;
+            //cambio sprite all'originale
+            impastobase.sprite = impastobaseSprite;
             prezzoText.text = "";
             Debug.Log("Nessun impasto selezionato");
+            riepilogo.UpdateRiepilogo();
             return;
         }
 
         // altrimenti prendi l'impasto corrispondente (index - 1 perché 0 è il placeholder)
         impastoSelezionato = menu.impasti[index - 1];
+        //assegnazione sprite impasto
+        impastobase.sprite = menu.impasti[index-1].sprite;
 
         if (prezzoText != null)
             prezzoText.text = $"{impastoSelezionato.prezzo:F2}€";
 
         Debug.Log($"Impasto selezionato: {impastoSelezionato.nome}");
+        riepilogo.UpdateRiepilogo();
     }
 
 

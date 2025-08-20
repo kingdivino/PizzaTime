@@ -15,3 +15,4 @@ MonoBehaviour:
   id: 2
   nome: Curcuma
   prezzo: 2
+  sprite: {fileID: 21300000, guid: 4d7b92a2fc0f3604997891443a56d838, type: 3}

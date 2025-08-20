@@ -11,12 +11,14 @@ public class IngredientSelector : MonoBehaviour
 
     // uso HashSet per evitare duplicati e ricerche costose
     private HashSet<string> selectedIngredients = new HashSet<string>();
+    private List<Ingrediente> ingredientiSelezionati = new List<Ingrediente>();
 
     private float totale = 0f;
+    public Riepilogo riepilogo;
     public TextMeshProUGUI totaleText;
     public Menu menu;
-    public GameObject togglePrefab; // prefab che contiene Toggle + ToggleIngredienti
-    public Transform toggleParent; // contenitore con Vertical Layout Group
+    public GameObject togglePrefab; 
+    public Transform toggleParent; 
     public PizzaBuilder pizzaVisual;
 
     // fallback guard (usato solo se non vuoi/puoi usare SetIsOnWithoutNotify)
@@ -76,6 +78,7 @@ public class IngredientSelector : MonoBehaviour
                     //    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
                     //}
                     selectedIngredients.Add(ingr.nome);
+                    ingredientiSelezionati.Add(ingr);
                     pizzaVisual.AddIngredient(ingrediente);
                     
                     ingredientCount++;
@@ -83,6 +86,7 @@ public class IngredientSelector : MonoBehaviour
                     totale = Mathf.Max(0f, totale);
                     UpdateTotaleText();
                     Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
+                    riepilogo.UpdateRiepilogo();
                     
                 }
                 else // deselect
@@ -97,6 +101,7 @@ public class IngredientSelector : MonoBehaviour
                     //    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
                     //}
                     selectedIngredients.Remove(ingr.nome);
+                    ingredientiSelezionati.Remove(ingr);
                     pizzaVisual.RemoveIngredient(ingrediente);
                     
                     ingredientCount = Mathf.Max(0, ingredientCount - 1);
@@ -104,7 +109,7 @@ public class IngredientSelector : MonoBehaviour
                     totale = Mathf.Max(0f, totale);
                     UpdateTotaleText();
                     Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
-                    
+                    riepilogo.UpdateRiepilogo();
                 }
             });
         }
@@ -117,8 +122,8 @@ public class IngredientSelector : MonoBehaviour
         if (totaleText != null) totaleText.text = $"{totale:F2}€";
     }
 
-    public List<string> GetSelectedIngredients()
+    public List<Ingrediente> GetSelectedIngredients()
     {
-        return new List<string>(selectedIngredients);
+        return new List<Ingrediente>(ingredientiSelezionati);
     }
 }

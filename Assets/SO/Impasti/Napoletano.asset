@@ -15,3 +15,4 @@ MonoBehaviour:
   id: 1
   nome: Napoletano
   prezzo: 1.5
+  sprite: {fileID: 21300000, guid: 4c98106b3aba8484b969719487c6ad9c, type: 3}
