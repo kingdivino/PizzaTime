@@ -3283,6 +3283,10 @@ PrefabInstance:
       value: Tavolo
       objectReference: {fileID: 0}
     - target: {fileID: 2914461272942885691, guid: 1c54a86840c11b6409a6d2c0cbb94103, type: 3}
+      propertyPath: Salatavoli
+      value: 
+      objectReference: {fileID: 1341619737}
+    - target: {fileID: 2914461272942885691, guid: 1c54a86840c11b6409a6d2c0cbb94103, type: 3}
       propertyPath: numeroText
       value: 
       objectReference: {fileID: 2128341969}
