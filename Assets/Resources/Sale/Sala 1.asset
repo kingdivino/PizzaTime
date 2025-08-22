@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c772b0a8bfa742b489874e91906c0b84, type: 3}
+  m_Name: Sala 1
+  m_EditorClassIdentifier: 
+  id: 0
+  nome: Sala 1
+  tavoli:
+  - {fileID: 11400000, guid: afa4d8887efe1e146a5b80a9e6996194, type: 2}
+  - {fileID: 11400000, guid: 8e7236cc5e93189488e7af69e2ee6990, type: 2}
+  - {fileID: 11400000, guid: bda011ca778f7aa44a50ca178c8fa47d, type: 2}

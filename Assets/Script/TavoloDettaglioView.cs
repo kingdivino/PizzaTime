@@ -30,10 +30,20 @@ public class TavoloDettaglioView : MonoBehaviour
         if (salaViewPanel != null) salaViewPanel.SetActive(false);
 
         titoloTxt.text = $"Tavolo {data.id}";
-        statoTxt.text = data.disponibile
+        string statoBase = data.disponibile
             ? $"Libero ({data.numeroPosti} posti)"
             : $"Occupato {data.postiOccupati}/{data.numeroPosti}";
 
+        if (!data.disponibile)
+        {
+            string cognome = string.IsNullOrWhiteSpace(data.cognomePrenotazione) ? "-" : data.cognomePrenotazione;
+            string orario = string.IsNullOrWhiteSpace(data.orarioPrenotazione) ? "-" : data.orarioPrenotazione;
+            statoTxt.text = $"{statoBase}\nPrenotazione: {cognome} • {orario}";
+        }
+        else
+        {
+            statoTxt.text = statoBase;
+        }
         foreach (Transform c in ordiniContainer)
             Destroy(c.gameObject);
 

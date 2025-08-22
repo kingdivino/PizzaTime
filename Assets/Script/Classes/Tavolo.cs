@@ -15,8 +15,10 @@ public class Tavolo : ScriptableObject
     public Prodotto[] prodottiOrdinati;
     public Pizza[] pizzeOrdinate;
     public Sprite Table;
-    
-    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate)
+    public string cognomePrenotazione;   // es. "Rossi"
+    public string orarioPrenotazione;    // es. "20:30"
+
+    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate, Sprite table, string cognomePrenotazione, string orarioPrenotazione)
     {
         this.id = id;
         this.nominativo = nominativo;
@@ -28,6 +30,8 @@ public class Tavolo : ScriptableObject
         this.timestampOrdinazione = timestampOrdinazione;
         this.prodottiOrdinati = prodottiOrdinati;
         this.pizzeOrdinate = pizzeOrdinate;
+        this.cognomePrenotazione = cognomePrenotazione;
+        this.orarioPrenotazione = orarioPrenotazione;
     }
 
 }
