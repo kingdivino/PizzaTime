@@ -26,17 +26,45 @@ public class PizzaBuilder : MonoBehaviour
         }
         else
         {
-            // caso multiplo: N istanze random
-            int count = Random.Range(4, 9); // range 4–8 incluso
+            // caso multiplo: N istanze random, senza sovrapposizioni
+            int count = Random.Range(5, 9); // range 5–8 inclusi
+            float minDistance = 0.4f; // distanza minima tra due ingredienti
+            List<Vector3> placedPositions = new List<Vector3>();
+
             for (int i = 0; i < count; i++)
             {
-                Vector2 randPos = Random.insideUnitCircle * pizzaRadius;
-                Quaternion randRot = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+                Vector2 randPos;
+                int attempts = 0;
+                bool foundPos = false;
 
-                CreateIngredientInstance(ingrediente, randPos, randRot);
+                do
+                {
+                    randPos = Random.insideUnitCircle * pizzaRadius;
+                    attempts++;
+
+                    // controlla distanza da tutti quelli già messi
+                    foundPos = true;
+                    foreach (var pos in placedPositions)
+                    {
+                        if (Vector2.Distance(randPos, pos) < minDistance)
+                        {
+                            foundPos = false;
+                            break;
+                        }
+                    }
+
+                } while (!foundPos && attempts < 20); // evita loop infinito
+
+                if (foundPos)
+                {
+                    Quaternion randRot = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+                    CreateIngredientInstance(ingrediente, randPos, randRot);
+                    placedPositions.Add(randPos);
+                }
             }
         }
     }
+
 
     // Rimuove tutte le istanze di un certo ingrediente.
     public void RemoveIngredient(Ingrediente ingrediente)
