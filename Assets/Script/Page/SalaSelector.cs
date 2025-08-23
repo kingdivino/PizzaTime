@@ -2,17 +2,29 @@ using UnityEngine;
 
 public class SalaSelector : MonoBehaviour
 {
-    public Sala salaA;
-    public Sala salaB;
-    public SalaView salaView; // riferimento al pannello che disegna i tavoli
+    public SalaView salaView;
+    public GameObject menuSale;
+    public GameObject salaViewPanel;
+    public GameObject aggiungi;
 
-    public void VaiSalaA()
+    public Sala salaCorrente { get; private set; }  // proprietà per la sala attiva
+
+    public void EntraInSala(Sala sala)
     {
-        salaView.MostraSala(salaA);
+        salaCorrente = sala; // 👈 QUI viene impostata la sala attuale
+        salaView.MostraSala(sala);
+
+        menuSale.SetActive(false);
+        aggiungi.SetActive(false);
+        salaViewPanel.SetActive(true);
     }
 
-    public void VaiSalaB()
+    public void TornaAlMenu()
     {
-        salaView.MostraSala(salaB);
+        salaCorrente = null; // 👈 reset quando torni al menu
+        salaViewPanel.SetActive(false);
+        menuSale.SetActive(true);
+        aggiungi.SetActive(true);
     }
 }
+

@@ -4,6 +4,8 @@ using UnityEngine;
 public class Sala : ScriptableObject
 {
     public int id;
+    public string nome;      // ⬅️ aggiunto
+
     public Tavolo[] tavoli;
 
 }

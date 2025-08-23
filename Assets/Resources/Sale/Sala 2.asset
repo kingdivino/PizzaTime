@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c772b0a8bfa742b489874e91906c0b84, type: 3}
+  m_Name: Sala 2
+  m_EditorClassIdentifier: 
+  id: 2
+  nome: Sala 2
+  tavoli:
+  - {fileID: 11400000, guid: 847b35f7d1522dc4c8c599f535cdb9bb, type: 2}
+  - {fileID: 11400000, guid: d564bca55cf19424fbfb67cba5d1c6e0, type: 2}
+  - {fileID: 11400000, guid: 262ddf8fa2cee5f489916376d6e37f71, type: 2}
+  - {fileID: 11400000, guid: 684a901be28aa574981c0e60c2c3a29f, type: 2}
+  - {fileID: 11400000, guid: a20339e832d61a14e8e324b84d34778c, type: 2}
+  - {fileID: 11400000, guid: 4db422fce230a634b86773ff7473d2b1, type: 2}
+  - {fileID: 11400000, guid: 29fe472ec4047e54d9eb5a76c8fd8c73, type: 2}
+  - {fileID: 11400000, guid: aafba94e15729c844b0eac0a1c4cba0f, type: 2}
+  - {fileID: 11400000, guid: 509a65eb500a95e4bb7dbeaf19c7e2e3, type: 2}
+  - {fileID: 11400000, guid: b13c53470c7de9340a2e444f659d43bf, type: 2}
+  - {fileID: 11400000, guid: d06f6d9efbb1dba4499027b24ef070ac, type: 2}
+  - {fileID: 11400000, guid: 8147fb6f442159544a6495682060e6d8, type: 2}
+  - {fileID: 11400000, guid: c7ccaf65dd3f59640bf9b4f4201c817d, type: 2}
+  - {fileID: 11400000, guid: faaae0e319d7f284ba3fdbc6be7610a9, type: 2}
+  - {fileID: 11400000, guid: e8289aad4a9390e429776e64d790392b, type: 2}
+  - {fileID: 11400000, guid: 0e41d41ef7e9e9f45b3b554c8ba2c4e1, type: 2}

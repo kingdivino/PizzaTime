@@ -10,13 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5b820e73f19ec454fbf586e8f4897efa, type: 3}
-  m_Name: Tavolo
+  m_Name: Tavolo 3
   m_EditorClassIdentifier: 
-  id: 0
-  nominativo: 
-  numeroPosti: 0
-  disponibile: 0
+  id: 21
+  nominativo: Tavolo 3
+  numeroPosti: 8
+  disponibile: 1
   postiOccupati: 0
   prodottiOrdinati: []
   pizzeOrdinate: []
-  Table: {fileID: -8841490917199087839, guid: 56be4e474f34f2248b09517df5c1da2e, type: 3}
+  Table: {fileID: 0}
+  cognomePrenotazione: 
+  orarioPrenotazione: 
