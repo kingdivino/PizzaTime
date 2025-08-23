@@ -13,6 +13,7 @@ public class TavoloDettaglioView : MonoBehaviour
     public GameObject salaViewPanel;   // ⬅️ il panel con la lista tavoli
 
     private Tavolo data;
+    public TavoloOrdiniOpener ordiniOpener; // drag&drop
 
     void Awake()
     {
@@ -25,6 +26,8 @@ public class TavoloDettaglioView : MonoBehaviour
 
         // Attivo pannello dettaglio
         gameObject.SetActive(true);
+
+        if (ordiniOpener != null) ordiniOpener.Bind(data); // abilita “Apri” anche su tavolo prenotato/occupato
 
         // Nascondo la lista tavoli
         if (salaViewPanel != null) salaViewPanel.SetActive(false);

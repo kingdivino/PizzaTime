@@ -25,9 +25,12 @@ public class TavoloPrenotazioneView : MonoBehaviour
     private Action<int, string, string> onConferma;
     private Action onAnnulla;
     private Tavolo tavoloCorrente;
+    public TavoloOrdiniOpener ordiniOpener; // drag&drop in Inspector
 
     public void Apri(Tavolo tavolo, Action<int, string, string> confermaCallback, Action annullaCallback)
     {
+        if (ordiniOpener != null) ordiniOpener.Bind(tavolo); // abilita pulsante “Apri”
+
         gameObject.SetActive(true);
         if (salaViewPanel) salaViewPanel.SetActive(false);
 
