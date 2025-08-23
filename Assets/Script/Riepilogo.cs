@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Riepilogo : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Riepilogo : MonoBehaviour
 
     public Transform areaComponenti;
     public GameObject componente;
+    public TMP_InputField inputField;
+    private string nome;
 
     private List<GameObject> listaComponenti = new List<GameObject>();
     private Pizza newPizza = null;
@@ -26,7 +29,6 @@ public class Riepilogo : MonoBehaviour
             GameObject impastocomp = Instantiate(componente, areaComponenti);
             impastocomp.GetComponent<ComponentiReference>().nome.text = impasto.nome;
             impastocomp.GetComponent<ComponentiReference>().prezzo.text = $"{impasto.prezzo:F2}€";
-            //totPrezzo += impasto.prezzo;
             listaComponenti.Add(impastocomp);
 
         }
@@ -37,12 +39,15 @@ public class Riepilogo : MonoBehaviour
             newcomp.GetComponent<ComponentiReference>().nome.text = ingrediente.nome;
             newcomp.GetComponent<ComponentiReference>().prezzo.text = $"{ingrediente.prezzo:F2}€";
             listaComponenti.Add(newcomp);
-            //totPrezzo += ingrediente.prezzo;
         }
-
-        //newPizza = new Pizza(impasto, IngredientSelector.GetSelectedIngredients().ToArray(), totPrezzo);
+        if (inputField.text == "")
+            nome = "Baccalà";
+        else
+            nome = inputField.text;
         newPizza = ScriptableObject.CreateInstance<Pizza>();
-        newPizza.Init(impasto, IngredientSelector.GetSelectedIngredients().ToArray());
+        newPizza.Init(impasto, IngredientSelector.GetSelectedIngredients().ToArray(), nome);
+        
+        
         totPrezzo = newPizza.GetPrezzo();
         testoprezzo.text = $"{totPrezzo:F2}€";
     }
@@ -69,6 +74,9 @@ public class Riepilogo : MonoBehaviour
             Debug.Log("Seleziona Almeno un Impasto per ordinare");
             return;
         }
-        Debug.Log($"Pizza creata: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
+        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
+        
+        TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
+        Debug.Log(TavoloCorrenteRegistry.tavoloAttivo.nominativo + TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate);
     }
 }

@@ -13,12 +13,12 @@ public class HomePageController : MonoBehaviour
         staffButton.onClick.AddListener(GoToStaff);
     }
 
-    void GoToCliente()
+    public void GoToCliente()
     {
         SceneManager.LoadScene("ClienteScene");
     }
 
-    void GoToStaff()
+    public void GoToStaff()
     {
         SceneManager.LoadScene("StaffScene");
     }
