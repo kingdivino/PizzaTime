@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Riepilogo : MonoBehaviour
@@ -77,6 +78,8 @@ public class Riepilogo : MonoBehaviour
         Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
         
         TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
-        Debug.Log(TavoloCorrenteRegistry.tavoloAttivo.nominativo + TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate);
+        Debug.Log(TavoloCorrenteRegistry.tavoloAttivo.nominativo + " contiene " + TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Count + " Pizze");
+
+        SceneManager.LoadScene("OrdiniScene");
     }
 }
