@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/OrdiniScene.unity
     guid: c00b2038f73b2d245a3d70c8b9a32a0e
+  - enabled: 1
+    path: Assets/Scenes/ClienteScene.unity
+    guid: 3086eb429b92541419a41b41ae3b4be9
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

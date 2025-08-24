@@ -20,7 +20,7 @@ public class TavoloOrdiniOpener : MonoBehaviour
         apriButton.onClick.AddListener(() =>
         {
             if (tavolo == null) return;
-            TavoloCorrenteRegistry.tavoloAttivo = tavolo;  // passa il tavolo
+            TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(tavolo);  // passa il tavolo
             SceneManager.LoadScene(scenaOrdini);           // vai alla scena ordini
         });
     }

@@ -5,4 +5,5 @@ public class ComponentiReference : MonoBehaviour
 {
     public TextMeshProUGUI nome;
     public TextMeshProUGUI prezzo;
+    public TextMeshProUGUI ingredienti;
 }

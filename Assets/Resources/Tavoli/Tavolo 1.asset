@@ -19,4 +19,7 @@ MonoBehaviour:
   postiOccupati: 0
   prodottiOrdinati: []
   pizzeOrdinate: []
+  ListaPizzeOrdinate: []
   Table: {fileID: 0}
+  cognomePrenotazione: 
+  orarioPrenotazione: 

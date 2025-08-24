@@ -6,11 +6,13 @@ public class Pizza : ScriptableObject
     public Impasto impasto;
     public Ingrediente[] ingredienti;
     public float prezzoTotale;
+    public string proprietario;
 
-    public void Init(Impasto impasto, Ingrediente[] ingredienti)
+    public void Init(Impasto impasto, Ingrediente[] ingredienti, string proprietario)
     {
         this.impasto = impasto;
         this.ingredienti = ingredienti;
+        this.proprietario = proprietario;
         CalcolaPrezzo();
     }
 

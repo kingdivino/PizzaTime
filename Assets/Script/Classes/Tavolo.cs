@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "Tavolo", menuName = "Scriptable Objects/Tavolo")]
 public class Tavolo : ScriptableObject
@@ -14,11 +15,14 @@ public class Tavolo : ScriptableObject
     public Time timestampOrdinazione;
     public Prodotto[] prodottiOrdinati;
     public Pizza[] pizzeOrdinate;
+    public List<Pizza> ListaPizzeOrdinate = new List<Pizza>();
     public Sprite Table;
     public string cognomePrenotazione;   // es. "Rossi"
     public string orarioPrenotazione;    // es. "20:30"
 
-    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate, Sprite table, string cognomePrenotazione, string orarioPrenotazione)
+    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, 
+        DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate, 
+        Sprite table, string cognomePrenotazione, string orarioPrenotazione)
     {
         this.id = id;
         this.nominativo = nominativo;
