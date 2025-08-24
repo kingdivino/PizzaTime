@@ -1,49 +1,77 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Collections;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class SalaDTO {
+    public int id;
+    public string nome;
+}
 
 public class SalaLoader : MonoBehaviour
 {
-    [Header("UI")]
     public Transform menuSaleContainer;
     public Button salaButtonTemplate;
-
-    [Header("Riferimenti")]
     public SalaSelector salaSelector;
 
-    void Start()
-    {
-        CaricaSale();
+    private string apiUrl = "http://localhost:3000/sale";
+
+    void Start() {
+        StartCoroutine(CaricaSale());
     }
 
-    private void CaricaSale()
+    IEnumerator CaricaSale()
     {
-        Sala[] sale = Resources.LoadAll<Sala>("Sale");
-        Debug.Log("Sale trovate: " + sale.Length);
-
-        foreach (Sala s in sale)
+        using (UnityWebRequest www = UnityWebRequest.Get(apiUrl))
         {
-            var btnObj = Instantiate(salaButtonTemplate, menuSaleContainer);
-            btnObj.name = $"Btn_{s.name}";
+            yield return www.SendWebRequest();
 
-            // 🔹 Se il prefab ha già SalaButton → lo prendo, altrimenti lo aggiungo
-            var salaBtn = btnObj.GetComponent<SalaButton>();
-            if (salaBtn == null) salaBtn = btnObj.gameObject.AddComponent<SalaButton>();
-
-            salaBtn.sala = s;
-
-            var txt = btnObj.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (txt != null)
-                txt.text = string.IsNullOrEmpty(s.nome) ? s.name : s.nome;
-
-            var salaLocal = s;
-            btnObj.onClick.RemoveAllListeners();
-            btnObj.onClick.AddListener(() =>
+            if (www.result != UnityWebRequest.Result.Success)
             {
-                salaSelector.EntraInSala(salaLocal);
-            });
+                Debug.LogError("Errore API: " + www.error);
+            }
+            else
+            {
+                string json = www.downloadHandler.text;
+                SalaDTO[] sale = JsonHelper.FromJson<SalaDTO>(json);
 
-            Debug.Log($"Creato bottone per sala '{salaBtn.sala.name}'");
+                Debug.Log("Sale trovate: " + sale.Length);
+
+                foreach (var s in sale)
+                {
+                    var btnObj = Instantiate(salaButtonTemplate, menuSaleContainer);
+                    btnObj.name = $"Btn_Sala_{s.id}";
+                    var txt = btnObj.GetComponentInChildren<TextMeshProUGUI>(true);
+                    if (txt != null) txt.text = s.nome;
+
+                    var salaLocal = s;
+                    btnObj.onClick.RemoveAllListeners();
+                    btnObj.onClick.AddListener(() => {
+                        salaSelector.EntraInSalaDB(salaLocal.id);
+                    });
+
+                    Debug.Log($"Creato bottone per sala '{s.nome}'");
+                }
+            }
         }
+    }
+}
+
+// helper per array JSON
+public static class JsonHelper
+{
+    public static T[] FromJson<T>(string json)
+    {
+        string newJson = "{\"array\":" + json + "}";
+        Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
+        return wrapper.array;
+    }
+    [System.Serializable]
+    private class Wrapper<T>
+    {
+        public T[] array;
     }
 }
