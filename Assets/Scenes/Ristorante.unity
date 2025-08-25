@@ -2236,6 +2236,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1487796463}
   m_CullTransparentMesh: 1
+--- !u!1 &1578506475
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1578506476}
+  m_Layer: 0
+  m_Name: DBTester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1578506476
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1578506475}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.84847, y: -0.07958, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1604082387
 GameObject:
   m_ObjectHideFlags: 0
@@ -2497,6 +2528,7 @@ GameObject:
   - component: {fileID: 2074028666}
   - component: {fileID: 2074028665}
   - component: {fileID: 2074028668}
+  - component: {fileID: 2074028669}
   m_Layer: 0
   m_Name: SalaViewPanel
   m_TagString: Untagged
@@ -2584,6 +2616,18 @@ MonoBehaviour:
   dettaglioUI: {fileID: 4906792021125046883}
   tavoloFormUI: {fileID: 2082621432}
   prenotazioneUI: {fileID: 447051739}
+--- !u!114 &2074028669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074028663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4bda4ca0b36ea54eb661580e556ddb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &2082621429 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6243502313071288439, guid: 1c54a86840c11b6409a6d2c0cbb94103, type: 3}
@@ -3590,3 +3634,4 @@ SceneRoots:
   - {fileID: 1116794056}
   - {fileID: 819890373}
   - {fileID: 277909542}
+  - {fileID: 1578506476}

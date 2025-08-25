@@ -1,10 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using UnityEngine.Networking;
 using System.Collections;
-using TMPro;
-using UnityEngine.UI;
-using System.Collections.Generic;
 
+// DTO per ricevere le sale da JSON
 [System.Serializable]
 public class SalaDTO {
     public int id;
@@ -13,17 +13,21 @@ public class SalaDTO {
 
 public class SalaLoader : MonoBehaviour
 {
-    public Transform menuSaleContainer;
-    public Button salaButtonTemplate;
-    public SalaSelector salaSelector;
+    [Header("UI")]
+    public Transform menuSaleContainer;   // contenitore dei bottoni sale
+    public Button salaButtonTemplate;     // prefab pulsante sala
+
+    [Header("Riferimenti")]
+    public SalaSelector salaSelector;     // gestore UI sale
 
     private string apiUrl = "http://localhost:3000/sale";
 
-    void Start() {
+    void Start()
+    {
         StartCoroutine(CaricaSale());
     }
 
-    IEnumerator CaricaSale()
+    private IEnumerator CaricaSale()
     {
         using (UnityWebRequest www = UnityWebRequest.Get(apiUrl))
         {
@@ -32,35 +36,39 @@ public class SalaLoader : MonoBehaviour
             if (www.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError("Errore API: " + www.error);
+                yield break;
             }
-            else
+
+            // ottengo risposta JSON
+            string json = www.downloadHandler.text;
+            SalaDTO[] sale = JsonHelper.FromJson<SalaDTO>(json);
+
+            Debug.Log("Sale trovate dal DB: " + sale.Length);
+
+            foreach (var s in sale)
             {
-                string json = www.downloadHandler.text;
-                SalaDTO[] sale = JsonHelper.FromJson<SalaDTO>(json);
+                var btnObj = Instantiate(salaButtonTemplate, menuSaleContainer);
+                btnObj.name = $"Btn_Sala_{s.id}";
 
-                Debug.Log("Sale trovate: " + sale.Length);
+                var txt = btnObj.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (txt != null)
+                    txt.text = s.nome;
 
-                foreach (var s in sale)
+                var salaLocal = s;
+                btnObj.onClick.RemoveAllListeners();
+                btnObj.onClick.AddListener(() =>
                 {
-                    var btnObj = Instantiate(salaButtonTemplate, menuSaleContainer);
-                    btnObj.name = $"Btn_Sala_{s.id}";
-                    var txt = btnObj.GetComponentInChildren<TextMeshProUGUI>(true);
-                    if (txt != null) txt.text = s.nome;
+                    // nuovo metodo su SalaSelector che gestisce sala dal DB
+                    salaSelector.EntraInSalaDB(salaLocal.id);
+                });
 
-                    var salaLocal = s;
-                    btnObj.onClick.RemoveAllListeners();
-                    btnObj.onClick.AddListener(() => {
-                        salaSelector.EntraInSalaDB(salaLocal.id);
-                    });
-
-                    Debug.Log($"Creato bottone per sala '{s.nome}'");
-                }
+                Debug.Log($"Creato bottone per sala '{s.nome}'");
             }
         }
     }
 }
 
-// helper per array JSON
+// helper per array JSON (Unity JsonUtility non supporta array di root)
 public static class JsonHelper
 {
     public static T[] FromJson<T>(string json)
@@ -69,6 +77,7 @@ public static class JsonHelper
         Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
         return wrapper.array;
     }
+
     [System.Serializable]
     private class Wrapper<T>
     {

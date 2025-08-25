@@ -26,5 +26,11 @@ public class SalaSelector : MonoBehaviour
         menuSale.SetActive(true);
         aggiungi.SetActive(true);
     }
+    public void EntraInSalaDB(int salaId)
+{
+    Debug.Log($"Entrato nella sala con ID={salaId} (dal DB)");
+    // TODO: chiamata API /tavoli?salaId=... e popolamento UI tavoli
+}
+
 }
 
