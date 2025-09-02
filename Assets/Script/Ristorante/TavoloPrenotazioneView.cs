@@ -2,34 +2,40 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using System.Collections;
+using UnityEngine.Networking;
 
 public class TavoloPrenotazioneView : MonoBehaviour
 {
     [Header("Campi")]
-    public TMP_InputField inputCognome;     // Cognome/Text Area
-    public TMP_InputField inputPersone;     // numeroPersone/Text Area
-    public TMP_InputField inputOre;         // ore/Text Area
-    public TMP_InputField inputMin;         // min/Text Area
+    public TMP_InputField inputCognome;
+    public TMP_InputField inputPersone;
+    public TMP_InputField inputOre;
+    public TMP_InputField inputMin;
+    public TavoloOrdiniOpener ordiniOpener; // assegna in Inspector il pulsante "Apri" del pannello prenotazione
 
-    [Header("UI Extra (opzionali)")]
-    public TextMeshProUGUI maxPostiTxt;     // "Max: X"
-    public TextMeshProUGUI erroreTxt;       // messaggi errore
+
+    [Header("UI Extra")]
+    public TextMeshProUGUI maxPostiTxt;
+    public TextMeshProUGUI erroreTxt;
 
     [Header("Azioni")]
-    public Button confermaButton;           // Conferma
-    public Button annullaButton;            // Annulla
+    public Button confermaButton;
+    public Button annullaButton;
 
     [Header("Navigazione")]
-    public GameObject salaViewPanel;        // pannello lista tavoli da riattivare alla chiusura
+    public GameObject salaViewPanel;
+
 
     private Action<int, string, string> onConferma;
     private Action onAnnulla;
     private Tavolo tavoloCorrente;
-    public TavoloOrdiniOpener ordiniOpener; // drag&drop in Inspector
+
+    private string apiUrl = "http://localhost:3000/tavoli"; // stesso endpoint del manager
 
     public void Apri(Tavolo tavolo, Action<int, string, string> confermaCallback, Action annullaCallback)
     {
-        if (ordiniOpener != null) ordiniOpener.Bind(tavolo); // abilita pulsante “Apri”
+        if (ordiniOpener != null) ordiniOpener.Bind(tavolo); // il pulsante "Apri" porterà a OrdiniScene con il tavolo
 
         gameObject.SetActive(true);
         if (salaViewPanel) salaViewPanel.SetActive(false);
@@ -58,7 +64,6 @@ public class TavoloPrenotazioneView : MonoBehaviour
         inputPersone.onValueChanged.AddListener(_ => Validazione());
         inputOre.onValueChanged.AddListener(_ => Validazione());
         inputMin.onValueChanged.AddListener(_ => Validazione());
-
         confermaButton.onClick.AddListener(() =>
         {
             if (!Validazione()) return;
@@ -67,18 +72,15 @@ public class TavoloPrenotazioneView : MonoBehaviour
             string cognome = inputCognome.text.Trim();
             string orario = FormattaOrario();
 
-            // aggiorna il tavolo
+            // aggiorna oggetto in memoria
             tavoloCorrente.disponibile = false;
             tavoloCorrente.postiOccupati = persone;
-
-            // se hai aggiunto i campi in Tavolo.cs li valorizziamo:
             tavoloCorrente.cognomePrenotazione = cognome;
             tavoloCorrente.orarioPrenotazione = orario;
 
-#if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(tavoloCorrente);
-            UnityEditor.AssetDatabase.SaveAssets();
-#endif
+            // 🔹 Salva nel DB
+            StartCoroutine(SalvaPrenotazioneNelDB(tavoloCorrente.id, persone, cognome, orario));
+
             onConferma?.Invoke(persone, cognome, orario);
 
             if (salaViewPanel) salaViewPanel.SetActive(true);
@@ -92,28 +94,55 @@ public class TavoloPrenotazioneView : MonoBehaviour
             gameObject.SetActive(false);
         });
 
-        // stato iniziale del bottone
         Validazione();
     }
 
-    bool Validazione()
+    private IEnumerator SalvaPrenotazioneNelDB(int tavoloId, int persone, string cognome, string orario)
     {
-        // persone
+    string url = $"{apiUrl}/{tavoloId}/prenota"; // nuova rotta
+
+        string json = $@"
+        {{
+            ""disponibile"": false,
+            ""posti_occupati"": {persone},
+            ""cognome_prenotazione"": ""{cognome}"",
+            ""orario_prenotazione"": ""{orario}""
+        }}";
+
+        UnityWebRequest request = UnityWebRequest.Put(url, json);
+        request.method = "PUT";
+        request.SetRequestHeader("Content-Type", "application/json");
+        request.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore salvataggio prenotazione: " + request.error);
+        }
+        else
+        {
+            Debug.Log("✅ Prenotazione salvata nel DB");
+        }
+    }
+
+    bool Validazione()
+    {   
+        Debug.Log("VALIDAZIONE CHIAMATA");
         int persone;
         bool personeOk = int.TryParse(inputPersone.text, out persone)
                          && persone >= 1
                          && persone <= Mathf.Max(1, tavoloCorrente.numeroPosti);
 
-        // cognome
         bool cognomeOk = !string.IsNullOrWhiteSpace(inputCognome.text);
 
-        // orario
         int hh, mm;
         bool oreOk = int.TryParse(inputOre.text, out hh) && hh >= 0 && hh <= 23;
         bool minOk = int.TryParse(inputMin.text, out mm) && mm >= 0 && mm <= 59;
         bool orarioOk = oreOk && minOk;
 
-        // messaggi
+        Debug.Log($"VALIDAZIONE → PersoneOk={personeOk}, CognomeOk={cognomeOk}, OrarioOk={orarioOk}");
+
         if (erroreTxt)
         {
             if (!personeOk)
@@ -142,6 +171,7 @@ public class TavoloPrenotazioneView : MonoBehaviour
         if (confermaButton) confermaButton.interactable = ok;
         return ok;
     }
+
 
     string FormattaOrario()
     {

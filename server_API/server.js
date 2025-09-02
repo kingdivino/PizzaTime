@@ -138,45 +138,45 @@ app.delete("/tavoli/:id", (req, res) => {
   });
 });
 
-app.put("/tavoli/:id", (req, res) => {
+// PUT /tavoli/:id → aggiorna prenotazione o altri campi
+app.put("/tavoli/:id/prenota", (req, res) => {
   const id = req.params.id;
-  const {
-    nominativo,
-    numero_posti,
-    disponibile,
-    posti_occupati,
-    cognome_prenotazione,
-    orario_prenotazione
-  } = req.body;
+  const { disponibile, posti_occupati, cognome_prenotazione, orario_prenotazione, nominativo, numero_posti } = req.body;
 
   const query = `
     UPDATE Tavoli
-    SET
+    SET 
+      disponibile = ?,
+      posti_occupati = ?,
+      cognome_prenotazione = ?,
+      orario_prenotazione = ?,
       nominativo = COALESCE(?, nominativo),
-      numero_posti = COALESCE(?, numero_posti),
-      disponibile = COALESCE(?, disponibile),
-      posti_occupati = COALESCE(?, posti_occupati),
-      cognome_prenotazione = COALESCE(?, cognome_prenotazione),
-      orario_prenotazione = COALESCE(?, orario_prenotazione)
+      numero_posti = COALESCE(?, numero_posti)
     WHERE id = ?
   `;
 
-  db.query(query, [
-    nominativo,
-    numero_posti,
-    disponibile,
-    posti_occupati,
-    cognome_prenotazione,
-    orario_prenotazione,
-    id
-  ], (err, result) => {
-    if (err) {
-      console.error("Errore DB:", err);
-      return res.status(500).json({ error: "Errore durante l'update" });
+  db.query(
+    query,
+    [
+      disponibile,
+      posti_occupati,
+      cognome_prenotazione,
+      orario_prenotazione,
+      nominativo,
+      numero_posti,
+      id
+    ],
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore aggiornamento DB" });
+      }
+
+      res.json({ success: true, updated: result.affectedRows });
     }
-    res.json({ message: "Tavolo aggiornato" });
-  });
+  );
 });
+
 
 // GET /tavoli/nominativi?salaId=2
 app.get("/tavoli/nominativi", (req, res) => {
@@ -189,6 +189,55 @@ app.get("/tavoli/nominativi", (req, res) => {
     });
 });
 
+// PUT /tavoli/:id/prenota
+// PUT /tavoli/:id/libera → libera il tavolo
+app.put("/tavoli/:id/libera", (req, res) => {
+  const id = req.params.id;
+
+  const query = `
+    UPDATE Tavoli
+    SET 
+      disponibile = true,
+      posti_occupati = 0,
+      cognome_prenotazione = '',
+      orario_prenotazione = ''
+    WHERE id = ?
+  `;
+
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error("Errore liberazione tavolo:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json({ success: true, updated: result.affectedRows });
+  });
+});
+
+// GET /tavoli/:id → dettagli tavolo
+app.get("/tavoli/:id", (req, res) => {
+  const tavoloId = req.params.id;
+
+  const query = `
+    SELECT id, sala_id, nominativo, numero_posti, disponibile,
+           posti_occupati, cognome_prenotazione, orario_prenotazione
+    FROM Tavoli
+    WHERE id = ?
+  `;
+
+  db.query(query, [tavoloId], (err, results) => {
+    if (err) {
+      console.error("Errore DB:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Tavolo non trovato" });
+    }
+
+    res.json(results[0]); // 🔹 ritorna un singolo oggetto
+  });
+});
 
 
 // avvio server

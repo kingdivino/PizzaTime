@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Tavolo 54
   m_EditorClassIdentifier: 
   id: 5
+  salaId: 1
   nominativo: Tavolo 5
   numeroPosti: 4
   disponibile: 1

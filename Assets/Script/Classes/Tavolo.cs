@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class Tavolo : ScriptableObject
 {
     public int id;
+    public int salaId;
     public string nominativo;
     public int numeroPosti;
     public bool disponibile;

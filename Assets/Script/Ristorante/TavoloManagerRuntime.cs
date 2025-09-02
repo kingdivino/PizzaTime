@@ -18,6 +18,9 @@ public class TavoloManagerRuntime : MonoBehaviour
     public RectTransform contenitore;
     public Button addTavoloButton;
 
+    [Header("Riferimenti")]
+    public TavoloManagerRuntime tavoloManager; // Drag & drop in Inspector
+
     private string apiUrl = "http://localhost:3000/tavoli";
 
   public void OnAddTavoloClicked()
@@ -86,6 +89,7 @@ public class TavoloManagerRuntime : MonoBehaviour
             nuovoSO.numeroPosti = creato.numero_posti;
             nuovoSO.disponibile = creato.disponibile;
             nuovoSO.postiOccupati = creato.posti_occupati;
+            nuovoSO.salaId = salaId;
 
             var lista = salaSelector.salaCorrente.tavoli?.ToList() ?? new System.Collections.Generic.List<Tavolo>();
             lista.Add(nuovoSO);
@@ -176,25 +180,51 @@ public void CaricaNomiTavoli(Action<List<string>> callback)
     StartCoroutine(CaricaNomiRoutine(callback));
 }
 
-private IEnumerator CaricaNomiRoutine(Action<List<string>> callback)
-{
-    string url = "http://localhost:3000/tavoli/nominativi";
+    private IEnumerator CaricaNomiRoutine(Action<List<string>> callback)
+    {
+        string url = "http://localhost:3000/tavoli/nominativi";
 
-    UnityWebRequest request = UnityWebRequest.Get(url);
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore caricamento nominativi: " + request.error);
+            callback?.Invoke(new List<string>());
+        }
+        else
+        {
+            string json = request.downloadHandler.text;
+            string[] nomi = JsonHelper.FromJson<string>(json); // o usa un parser JSON custom
+            callback?.Invoke(nomi.ToList());
+        }
+    }
+public void LiberaTavoloNelDB(int tavoloId)
+{
+    StartCoroutine(LiberaRoutine(tavoloId));
+}
+
+private IEnumerator LiberaRoutine(int tavoloId)
+{
+    string url = $"{apiUrl}/{tavoloId}/libera";
+
+    UnityWebRequest request = UnityWebRequest.Put(url, "{}");
+    request.method = "PUT";
+    request.SetRequestHeader("Content-Type", "application/json");
+    request.downloadHandler = new DownloadHandlerBuffer();
+
     yield return request.SendWebRequest();
 
     if (request.result != UnityWebRequest.Result.Success)
     {
-        Debug.LogError("❌ Errore caricamento nominativi: " + request.error);
-        callback?.Invoke(new List<string>());
+        Debug.LogError("❌ Errore liberazione tavolo: " + request.error);
     }
     else
     {
-        string json = request.downloadHandler.text;
-        string[] nomi = JsonHelper.FromJson<string>(json); // o usa un parser JSON custom
-        callback?.Invoke(nomi.ToList());
+        Debug.Log("✅ Tavolo liberato nel DB");
     }
 }
+
 
 // fix per array JSON root non supportati da Unity
 private string FixJsonArray(string json)

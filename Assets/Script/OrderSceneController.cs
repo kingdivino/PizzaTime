@@ -31,9 +31,9 @@ public class OrderSceneController : MonoBehaviour
         if (btnChiudi)
             btnChiudi.onClick.AddListener(() =>
             {
-                // se vuoi solo tornare alla sala:
-                SceneManager.LoadScene("SaleScene");
+                SceneManager.LoadScene("Ristorante");
             });
+
 
         if (btnInviaOrdine)
             btnInviaOrdine.onClick.AddListener(() =>
@@ -53,7 +53,7 @@ public class OrderSceneController : MonoBehaviour
                 GameObject newriga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
                 ComponentiReference comp = newriga.GetComponent<ComponentiReference>();
                 comp.nome.text = $"Pizza di {p.proprietario}";
-                comp.prezzo.text = $"{p.prezzoTotale:F2}€";
+                comp.prezzo.text = $"{p.prezzoTotale:F2}â‚¬";
                 comp.ingredienti.text = "Impasto:" + p.impasto + "\nIngredienti: "+ p.ingredienti.ToCommaSeparatedString();
             }
         }

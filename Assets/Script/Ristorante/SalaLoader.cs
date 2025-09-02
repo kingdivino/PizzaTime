@@ -22,10 +22,17 @@ public class SalaLoader : MonoBehaviour
 
     private string apiUrl = "http://localhost:3000/sale";
 
-    void Start()
-    {
-        StartCoroutine(CaricaSale());
-    }
+void Start()
+{
+    StartCoroutine(CaricaSale());
+
+    if (SalaCorrenteRegistry.salaIdAttiva != 0)
+        {
+            salaSelector.EntraInSalaDB(SalaCorrenteRegistry.salaIdAttiva);
+            SalaCorrenteRegistry.salaIdAttiva = 0; // reset dopo l'uso
+        }
+}
+
 
     private IEnumerator CaricaSale()
     {

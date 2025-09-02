@@ -117,21 +117,23 @@ public class TavoloView : MonoBehaviour
         AggiornaUI();
     }
 
-    private void LiberaTavolo()
+private void LiberaTavolo()
+{
+    if (data == null) return;
+
+    data.disponibile = true;
+    data.postiOccupati = 0;
+    data.cognomePrenotazione = "";
+    data.orarioPrenotazione = "";
+
+    // 🔹 Chiamata al DB tramite manager
+    if (tavoloManager != null)
     {
-        if (data == null) return;
-
-        data.disponibile = true;
-        data.postiOccupati = 0;
-        data.cognomePrenotazione = "";
-        data.orarioPrenotazione = "";
-
-#if UNITY_EDITOR
-        UnityEditor.EditorUtility.SetDirty(data);
-        UnityEditor.AssetDatabase.SaveAssets();
-#endif
-
-        AggiornaUI();
-        Debug.Log($"{data.nominativo} è stato liberato!");
+        tavoloManager.LiberaTavoloNelDB(data.id);
     }
+
+    AggiornaUI();
+    Debug.Log($"{data.nominativo} è stato liberato!");
+}
+
 }

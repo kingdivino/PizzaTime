@@ -533,6 +533,7 @@ GameObject:
   - component: {fileID: 277909543}
   - component: {fileID: 277909544}
   - component: {fileID: 277909545}
+  - component: {fileID: 277909546}
   m_Layer: 0
   m_Name: SalaManagerRuntime
   m_TagString: Untagged
@@ -619,6 +620,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 986f33d0627aadd45923829fdc79daa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &277909546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277909540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8ded9915d0e594b8b3da3e524726f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  salaSelector: {fileID: 819890374}
 --- !u!1 &303010099
 GameObject:
   m_ObjectHideFlags: 0
@@ -806,6 +820,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   apriButton: {fileID: 436095645}
+  salaSelector: {fileID: 819890374}
   scenaOrdini: OrdiniScene
 --- !u!1 &460376471
 GameObject:
@@ -1818,6 +1833,34 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1251115109}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnAddTavoloClicked
+      objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TavoloManagerRuntime, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7871173378601640900, guid: 2976fa34b3c3c2c4e928aad037d397d6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1867,7 +1910,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1251115108}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 18477a950463ba848bd3cf411712d2b3, type: 3}
   m_Name: 
@@ -1878,6 +1921,7 @@ MonoBehaviour:
   tavoloPrefab: {fileID: 1182458409}
   contenitore: {fileID: 1341619738}
   addTavoloButton: {fileID: 1400280425}
+  tavoloManager: {fileID: 0}
 --- !u!4 &1251115110
 Transform:
   m_ObjectHideFlags: 0
@@ -2999,6 +3043,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 152.20001
       objectReference: {fileID: 0}
+    - target: {fileID: 169712747431809828, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_margin.w
+      value: -53.55076
+      objectReference: {fileID: 0}
+    - target: {fileID: 1075226883196399921, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 445.29
+      objectReference: {fileID: 0}
+    - target: {fileID: 1075226883196399921, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -980
+      objectReference: {fileID: 0}
+    - target: {fileID: 2437741352259439004, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: salaSelector
+      value: 
+      objectReference: {fileID: 819890374}
     - target: {fileID: 3637512840157886626, guid: 832590d104da31a49853618a9cebb562, type: 3}
       propertyPath: salaViewPanel
       value: 
@@ -3033,7 +3093,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4906792022775871608, guid: 832590d104da31a49853618a9cebb562, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -644
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4906792022775871608, guid: 832590d104da31a49853618a9cebb562, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3090,6 +3150,22 @@ PrefabInstance:
     - target: {fileID: 7345574528704059647, guid: 832590d104da31a49853618a9cebb562, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8668391356501074524, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 749.42
+      objectReference: {fileID: 0}
+    - target: {fileID: 8668391356501074524, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 760.46
+      objectReference: {fileID: 0}
+    - target: {fileID: 8668391356501074524, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 445.29
+      objectReference: {fileID: 0}
+    - target: {fileID: 8668391356501074524, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -546.91
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

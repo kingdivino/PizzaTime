@@ -27,7 +27,7 @@ public class PizzaBuilder : MonoBehaviour
         else
         {
             // caso multiplo: N istanze random, senza sovrapposizioni
-            int count = Random.Range(5, 9); // range 5–8 inclusi
+            int count = Random.Range(5, 9); // range 5ï¿½8 inclusi
             float minDistance = 0.4f; // distanza minima tra due ingredienti
             List<Vector3> placedPositions = new List<Vector3>();
 
@@ -42,7 +42,7 @@ public class PizzaBuilder : MonoBehaviour
                     randPos = Random.insideUnitCircle * pizzaRadius;
                     attempts++;
 
-                    // controlla distanza da tutti quelli già messi
+                    // controlla distanza da tutti quelli giï¿½ messi
                     foundPos = true;
                     foreach (var pos in placedPositions)
                     {

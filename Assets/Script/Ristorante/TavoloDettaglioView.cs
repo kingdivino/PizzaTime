@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Collections;
 
 public class TavoloDettaglioView : MonoBehaviour
 {
@@ -10,10 +12,11 @@ public class TavoloDettaglioView : MonoBehaviour
     public GameObject ordinePrefab;
     public Button btnChiudi;
 
-    public GameObject salaViewPanel;   // ⬅️ il panel con la lista tavoli
+    public GameObject salaViewPanel;
+    public TavoloOrdiniOpener ordiniOpener; // drag&drop
 
     private Tavolo data;
-    public TavoloOrdiniOpener ordiniOpener; // drag&drop
+    private string apiUrl = "http://localhost:3000/tavoli"; // endpoint API
 
     void Awake()
     {
@@ -24,15 +27,48 @@ public class TavoloDettaglioView : MonoBehaviour
     {
         data = tavolo;
 
-        // Attivo pannello dettaglio
         gameObject.SetActive(true);
 
-        if (ordiniOpener != null) ordiniOpener.Bind(data); // abilita “Apri” anche su tavolo prenotato/occupato
-
-        // Nascondo la lista tavoli
+        if (ordiniOpener != null) ordiniOpener.Bind(data);
         if (salaViewPanel != null) salaViewPanel.SetActive(false);
 
         titoloTxt.text = $"Tavolo {data.id}";
+
+        // 🔹 chiede al DB i dati aggiornati
+        StartCoroutine(CaricaDettagliDalDB(data.id));
+    }
+
+private IEnumerator CaricaDettagliDalDB(int tavoloId)
+{
+    string url = $"{apiUrl}/{tavoloId}";
+
+    using (UnityWebRequest req = UnityWebRequest.Get(url))
+    {
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore caricamento tavolo: " + req.error);
+            yield break;
+        }
+
+        TavoloDTO dto = JsonUtility.FromJson<TavoloDTO>(req.downloadHandler.text);
+
+        // aggiorna oggetto in memoria
+        data.nominativo = dto.nominativo;
+        data.numeroPosti = dto.numero_posti;
+        data.disponibile = dto.disponibile;
+        data.postiOccupati = dto.posti_occupati;
+        data.cognomePrenotazione = dto.cognome_prenotazione;
+        data.orarioPrenotazione = dto.orario_prenotazione;
+
+        AggiornaUI();
+    }
+}
+
+
+    private void AggiornaUI()
+    {
         string statoBase = data.disponibile
             ? $"Libero ({data.numeroPosti} posti)"
             : $"Occupato {data.postiOccupati}/{data.numeroPosti}";
@@ -47,6 +83,7 @@ public class TavoloDettaglioView : MonoBehaviour
         {
             statoTxt.text = statoBase;
         }
+
         foreach (Transform c in ordiniContainer)
             Destroy(c.gameObject);
 
@@ -72,8 +109,19 @@ public class TavoloDettaglioView : MonoBehaviour
     public void Chiudi()
     {
         gameObject.SetActive(false);
-
-        // Riattivo la lista tavoli
         if (salaViewPanel != null) salaViewPanel.SetActive(true);
+    }
+
+    [System.Serializable]
+    private class TavoloDTO
+    {
+        public int id;
+        public string nominativo;
+        public int numero_posti;
+        public bool disponibile;
+        public int posti_occupati;
+        public string cognome_prenotazione;
+        public string orario_prenotazione;
+        // aggiungi qui anche array di ordini se l’API li manda
     }
 }
