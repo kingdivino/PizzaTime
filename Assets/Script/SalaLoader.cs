@@ -54,16 +54,28 @@ public class SalaLoader : MonoBehaviour
                 if (txt != null)
                     txt.text = s.nome;
 
-                var salaLocal = s;
+                // 🔹 CREO oggetto Sala temporaneo con ID e Nome corretti
+                var salaSO = ScriptableObject.CreateInstance<Sala>();
+                salaSO.id = s.id;
+                salaSO.nome = s.nome;
+                salaSO.name = s.nome;
+                salaSO.tavoli = new Tavolo[0]; // inizialmente vuoto
+
+                // 🔹 ASSOCIO al SalaButton
+                var salaBtn = btnObj.GetComponent<SalaButton>();
+                if (salaBtn == null) salaBtn = btnObj.gameObject.AddComponent<SalaButton>();
+                salaBtn.sala = salaSO;
+
+                // 🔹 Listener per entrare nella sala
                 btnObj.onClick.RemoveAllListeners();
                 btnObj.onClick.AddListener(() =>
                 {
-                    // nuovo metodo su SalaSelector che gestisce sala dal DB
-                    salaSelector.EntraInSalaDB(salaLocal.id);
+                    salaSelector.EntraInSalaDB(salaSO.id);
                 });
 
                 Debug.Log($"Creato bottone per sala '{s.nome}'");
             }
+
         }
     }
 }

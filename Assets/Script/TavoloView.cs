@@ -7,28 +7,31 @@ public class TavoloView : MonoBehaviour
     [Header("UI Riferimenti")]
     public TextMeshProUGUI numeroTxt;
     public TextMeshProUGUI statoTxt;
-    public Image background; // opzionale, sfondo del tavolo
+    public Image background;
 
     [Header("Bottoni")]
     public Button liberaButton;
-    public Button modificaButton; // 👈 nuovo pulsante Modifica
+    public Button modificaButton;
 
     private Tavolo data;
     private TavoloDettaglioView dettaglioUI;
     private TavoloPrenotazioneView prenotazioneUI;
-    private TavoloFormUI tavoloFormUI; // 👈 riferimento al form (assegna in Inspector)
+    private TavoloFormUI tavoloFormUI;
+    private TavoloManagerRuntime tavoloManager; // ✅ nuovo
 
     public void Bind(
         Tavolo tavolo,
         TavoloDettaglioView dettaglio,
         TavoloPrenotazioneView prenotazione,
-        TavoloFormUI formUI // 👈 passiamo il form al bind
+        TavoloFormUI formUI,
+        TavoloManagerRuntime manager
     )
     {
         data = tavolo;
         dettaglioUI = dettaglio;
         prenotazioneUI = prenotazione;
         tavoloFormUI = formUI;
+        tavoloManager = manager;
 
         AggiornaUI();
 
@@ -36,58 +39,48 @@ public class TavoloView : MonoBehaviour
         if (btn != null)
         {
             btn.onClick.RemoveAllListeners();
-
-            // 🔹 Listener unico → decide al click in base allo stato attuale
             btn.onClick.AddListener(() =>
             {
                 if (data.disponibile)
                 {
-                    // tavolo libero → apri pannello prenotazione
                     prenotazioneUI.Apri(data,
                         (persone, cognome, orario) =>
                         {
                             Debug.Log($"Prenotato {data.nominativo} da {cognome} alle {orario} per {persone} persone");
-                            AggiornaUI(); // refresh immediato
+                            AggiornaUI();
                         },
                         () => Debug.Log("Prenotazione annullata")
                     );
                 }
                 else
                 {
-                    // tavolo occupato → apri dettaglio
                     dettaglioUI.MostraDettaglio(data);
                 }
             });
         }
 
-        // pulsante Libera
         if (liberaButton != null)
         {
             liberaButton.onClick.RemoveAllListeners();
             liberaButton.onClick.AddListener(LiberaTavolo);
         }
 
-        // pulsante Modifica (solo se libero)
         if (modificaButton != null)
         {
             modificaButton.onClick.RemoveAllListeners();
             modificaButton.onClick.AddListener(() =>
             {
-                if (data.disponibile && tavoloFormUI != null)
+                if (data.disponibile && tavoloFormUI != null && tavoloManager != null)
                 {
+                    Debug.Log($"🟡 Modifica tavolo {data.nominativo}");
+
                     tavoloFormUI.ApriPerModifica(data, (nuovoNome, nuoviPosti) =>
                     {
-                        data.nominativo = nuovoNome;
-                        data.numeroPosti = nuoviPosti;
+                        // chiamiamo il manager per aggiornare il tavolo nel DB
+                        tavoloManager.AggiornaTavoloNelDB(data.id, nuovoNome, nuoviPosti);
 
-#if UNITY_EDITOR
-                        UnityEditor.EditorUtility.SetDirty(data);
-                        UnityEditor.AssetDatabase.SaveAssets();
-#endif
-                        AggiornaUI();
-                        Debug.Log($"Tavolo modificato: {nuovoNome}, posti: {nuoviPosti}");
                     },
-                    () => Debug.Log("Modifica annullata"));
+                    () => Debug.Log("Modifica tavolo annullata"));
                 }
             });
         }
@@ -107,7 +100,7 @@ public class TavoloView : MonoBehaviour
             if (background != null) background.color = new Color(0.7f, 1f, 0.7f);
 
             if (liberaButton != null) liberaButton.gameObject.SetActive(false);
-            if (modificaButton != null) modificaButton.gameObject.SetActive(true); // 👈 mostra Modifica solo se libero
+            if (modificaButton != null) modificaButton.gameObject.SetActive(true);
         }
         else
         {
@@ -115,13 +108,12 @@ public class TavoloView : MonoBehaviour
             if (background != null) background.color = new Color(1f, 0.8f, 0.6f);
 
             if (liberaButton != null) liberaButton.gameObject.SetActive(true);
-            if (modificaButton != null) modificaButton.gameObject.SetActive(false); // 👈 nascondi Modifica se occupato
+            if (modificaButton != null) modificaButton.gameObject.SetActive(false);
         }
     }
 
     void Update()
     {
-        // refresh continuo durante playmode
         AggiornaUI();
     }
 

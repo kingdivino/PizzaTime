@@ -1,92 +1,125 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Linq;
+using System.Collections;
+using UnityEngine.Networking;
+
 
 public class SalaManagerRuntime : MonoBehaviour
 {
     [Header("UI (MenuSale)")]
-    public Transform menuSaleContainer;   // contenitore dei pulsanti sala
-    public GameObject salaButtonTemplate; // prefab di un pulsante sala
-    public TMP_InputField inputNomeSala;  // input per nome sala
+    public Transform menuSaleContainer;
+    public GameObject salaButtonTemplate;
+    public GameObject menuSalePanel;
+    public TMP_InputField inputNomeSala;
 
     [Header("Logica sala")]
-    public SalaSelector salaSelector;     // riferimento a SalaSelector
+    public SalaSelector salaSelector;
+    public GameObject panelAggiuntaSala;
+    public Button btnConferma;
+    public Button btnAnnulla;
+    public Button btnApriPanelAggiungi; // il bottone “Aggiungi Sala” principale
 
-    private int salaCounter = 0;
+
+    private string apiUrl = "http://localhost:3000/sale"; // API per creare sala
 
     public void CreaNuovaSala()
     {
-        string desiredName = inputNomeSala != null ? inputNomeSala.text.Trim() : "";
-
-#if UNITY_EDITOR
-        if (string.IsNullOrEmpty(desiredName))
+        string nomeSala = inputNomeSala != null ? inputNomeSala.text.Trim() : "";
+        if (string.IsNullOrEmpty(nomeSala))
         {
-            var guids = UnityEditor.AssetDatabase.FindAssets("t:Sala", new[] { "Assets/Resources/Sale" });
-            var names = guids
-                .Select(g => System.IO.Path.GetFileNameWithoutExtension(UnityEditor.AssetDatabase.GUIDToAssetPath(g)))
-                .ToHashSet();
+            Debug.LogWarning("Inserire un nome per la sala.");
+            return;
+        }
 
-            int i = 0;
-            while (true)
+        StartCoroutine(CreaSalaNelDatabase(nomeSala));
+    }
+
+    IEnumerator CreaSalaNelDatabase(string nomeSala)
+    {
+        var salaJson = JsonUtility.ToJson(new SalaDTO { nome = nomeSala });
+        var request = new UnityWebRequest(apiUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(salaJson);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Errore creazione sala: " + request.error);
+        }
+        else
+        {
+            string json = request.downloadHandler.text;
+
+            try
             {
-                string candidate = $"Sala {i}";
-                if (!names.Contains(candidate))
+                SalaDTO nuovaSala = JsonUtility.FromJson<SalaDTO>(json);
+                Debug.Log($"Sala creata nel DB con id={nuovaSala.id}, nome={nuovaSala.nome}");
+
+                // 🔹 CREA ScriptableObject Sala
+                var salaSO = ScriptableObject.CreateInstance<Sala>();
+                salaSO.id = nuovaSala.id;
+                salaSO.nome = nuovaSala.nome;
+                salaSO.name = nuovaSala.nome;
+                salaSO.tavoli = new Tavolo[0];
+
+                // 🔹 CREA pulsante UI
+                var btnGO = Instantiate(salaButtonTemplate, menuSaleContainer);
+                btnGO.name = $"Btn_Sala_{nuovaSala.id}";
+
+                // 🔹 Assegna testo
+                var txt = btnGO.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (txt != null)
+                    txt.text = nuovaSala.nome;
+
+                // 🔹 Assegna Sala allo script SalaButton
+                var salaBtn = btnGO.GetComponent<SalaButton>();
+                if (salaBtn == null) salaBtn = btnGO.AddComponent<SalaButton>();
+                salaBtn.sala = salaSO;
+
+                // 🔹 Listener pulsante → entra nella sala
+                btnGO.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    desiredName = candidate;
-                    break;
-                }
-                i++;
+                    salaSelector.EntraInSalaDB(nuovaSala.id);
+                });
+
+                if (inputNomeSala != null)
+                    inputNomeSala.text = "";
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Errore nel parsing JSON della risposta: " + e.Message);
+                Debug.LogError("JSON ricevuto: " + json);
             }
         }
-#else
-        if (string.IsNullOrEmpty(desiredName))
-            desiredName = $"Sala {salaCounter}";
-#endif
-
-        var nuovaSala = ScriptableObject.CreateInstance<Sala>();
-        nuovaSala.nome = desiredName;
-        nuovaSala.name = desiredName;
-        nuovaSala.tavoli = new Tavolo[0];
-
-#if UNITY_EDITOR
-        string path = $"Assets/Resources/Sale/{desiredName}.asset";
-        path = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(path);
-        UnityEditor.AssetDatabase.CreateAsset(nuovaSala, path);
-
-        string fileNameNoExt = System.IO.Path.GetFileNameWithoutExtension(path);
-        nuovaSala.name = fileNameNoExt;
-        nuovaSala.nome = fileNameNoExt;
-
-        UnityEditor.EditorUtility.SetDirty(nuovaSala);
-        UnityEditor.AssetDatabase.SaveAssets();
-        UnityEditor.AssetDatabase.Refresh();
-#endif
-
-        Debug.Log($"[SalaManager] Creata sala: campo nome='{nuovaSala.nome}', assetName='{nuovaSala.name}'");
-
-        var btnGO = Instantiate(salaButtonTemplate, menuSaleContainer);
-        btnGO.name = $"Btn_{nuovaSala.name}";
-
-        // 🔹 Se il prefab ha già SalaButton → lo prendo, altrimenti lo aggiungo
-        var salaBtn = btnGO.GetComponent<SalaButton>();
-        if (salaBtn == null) salaBtn = btnGO.AddComponent<SalaButton>();
-
-        salaBtn.sala = nuovaSala;
-
-        var txt = btnGO.GetComponentInChildren<TextMeshProUGUI>(true);
-        if (txt != null) txt.text = nuovaSala.name;
-
-        var salaLocal = nuovaSala;
-        var btn = btnGO.GetComponent<Button>();
-        btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(() =>
-        {
-            salaSelector.EntraInSala(salaLocal);
-        });
-
-        if (inputNomeSala != null) inputNomeSala.text = "";
-
-        Debug.Log($"Creato bottone per sala '{salaBtn.sala.name}'");
     }
+
+void Start()
+{
+    panelAggiuntaSala.SetActive(false);
+    btnApriPanelAggiungi.onClick.AddListener(() =>
+    {
+        menuSalePanel.SetActive(false);
+        panelAggiuntaSala.SetActive(true);
+        inputNomeSala.text = "";
+    });
+
+    btnAnnulla.onClick.AddListener(() =>
+    {
+        menuSalePanel.SetActive(true);
+        panelAggiuntaSala.SetActive(false);
+    });
+
+    btnConferma.onClick.AddListener(() =>
+    {
+        menuSalePanel.SetActive(true);
+        CreaNuovaSala();
+        panelAggiuntaSala.SetActive(false);
+    });
+}
+
+
 }
