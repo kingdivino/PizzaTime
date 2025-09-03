@@ -15,4 +15,6 @@ public class Impasto : ScriptableObject
         this.prezzo = prezzo;
         this.sprite = sprite;
     }
+    public Impasto() { }
+
 }

@@ -21,4 +21,6 @@ public class Ingrediente : ScriptableObject
         this.singolo = singolo;
     }
 
+    public Ingrediente() { }
+
 }

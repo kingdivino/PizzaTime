@@ -239,6 +239,121 @@ app.get("/tavoli/:id", (req, res) => {
   });
 });
 
+// POST /pizze → salva una pizza nel DB
+app.post("/pizze", (req, res) => {
+  const { nome, prezzo, impasto_id, ingredienti } = req.body;
+
+  if (!nome || !prezzo || !impasto_id || !ingredienti) {
+    return res.status(400).json({ error: "Dati incompleti" });
+  }
+
+  const query = `
+    INSERT INTO Pizze (nome, prezzo, impasto_id, ingredienti)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  // ingredienti come JSON
+  const ingredientiJson = JSON.stringify(ingredienti);
+
+  db.query(query, [nome, prezzo, impasto_id, ingredientiJson], (err, result) => {
+    if (err) {
+      console.error("Errore inserimento pizza:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json({ 
+      success: true,
+      pizzaId: result.insertId
+    });
+  });
+});
+// POST /ordini → salva un nuovo ordine
+app.post("/ordini", (req, res) => {
+  const { tavolo_id, prezzo_totale, pizze, prodotti } = req.body;
+
+  const selectQuery = "SELECT * FROM Ordini WHERE tavolo_id = ? LIMIT 1";
+  db.query(selectQuery, [tavolo_id], (err, results) => {
+    if (err) {
+      console.error("❌ Errore SELECT:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    if (results.length > 0) {
+      const ordine = results[0];
+
+      let pizzeEsistenti = [];
+      try { pizzeEsistenti = JSON.parse(ordine.pizze || "[]"); } catch {}
+      let prodottiEsistenti = [];
+      try { prodottiEsistenti = JSON.parse(ordine.prodotti || "[]"); } catch {}
+
+      const pizzeFinali = [...pizzeEsistenti, ...pizze];
+      const prodottiFinali = [...prodottiEsistenti, ...prodotti];
+
+      // 🔑 Somma numerica sicura
+      const prezzoAttuale = parseFloat(ordine.prezzo_totale) || 0;
+      const prezzoNuovo = parseFloat(prezzo_totale) || 0;
+      const prezzoFinale = prezzoAttuale + prezzoNuovo;
+
+      const updateQuery = `
+        UPDATE Ordini 
+        SET prezzo_totale = ?, pizze = ?, prodotti = ?
+        WHERE tavolo_id = ?`;
+
+      db.query(
+        updateQuery,
+        [prezzoFinale, JSON.stringify(pizzeFinali), JSON.stringify(prodottiFinali), tavolo_id],
+        (err2) => {
+          if (err2) {
+            console.error("❌ Errore UPDATE:", err2);
+            return res.status(500).json({ error: "Errore DB" });
+          }
+          res.json({ success: true, action: "updated", tavolo_id, prezzo_totale: prezzoFinale });
+        }
+      );
+    } else {
+      const insertQuery = `
+        INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti)
+        VALUES (?, ?, ?, ?)`;
+
+      db.query(
+        insertQuery,
+        [tavolo_id, parseFloat(prezzo_totale) || 0, JSON.stringify(pizze), JSON.stringify(prodotti)],
+        (err3, result) => {
+          if (err3) {
+            console.error("❌ Errore INSERT:", err3);
+            return res.status(500).json({ error: "Errore DB" });
+          }
+          res.json({ success: true, action: "inserted", id: result.insertId });
+        }
+      );
+    }
+  });
+});
+
+
+
+// GET /ordini?tavoloId=1 → ritorna ultimo ordine di un tavolo
+app.get("/ordini", (req, res) => {
+  console.log("📥 GET /ordini query:", req.query);
+  const tavoloId = req.query.tavoloId;
+  if (!tavoloId) {
+    return res.status(400).json({ error: "Parametro tavoloId mancante" });
+  }
+
+  const query = `
+    SELECT * FROM Ordini
+    WHERE tavolo_id = ?
+    LIMIT 1
+  `;
+
+  db.query(query, [tavoloId], (err, results) => {
+    if (err) {
+      console.error("❌ Errore DB:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+    res.json(results[0] || {});
+  });
+});
 
 // avvio server
 app.listen(3000, () => {

@@ -20,6 +20,7 @@ public class Tavolo : ScriptableObject
     public Sprite Table;
     public string cognomePrenotazione;   // es. "Rossi"
     public string orarioPrenotazione;    // es. "20:30"
+    
 
     public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, 
         DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate, 

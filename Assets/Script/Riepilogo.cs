@@ -29,7 +29,7 @@ public class Riepilogo : MonoBehaviour
             impasto = ImpastoSelector.GetImpastoSelezionato();
             GameObject impastocomp = Instantiate(componente, areaComponenti);
             impastocomp.GetComponent<ComponentiReference>().nome.text = impasto.nome;
-            impastocomp.GetComponent<ComponentiReference>().prezzo.text = $"{impasto.prezzo:F2}€";
+            impastocomp.GetComponent<ComponentiReference>().prezzo.text = $"{impasto.prezzo:F2}â‚¬";
             listaComponenti.Add(impastocomp);
 
         }
@@ -38,11 +38,11 @@ public class Riepilogo : MonoBehaviour
         {
             GameObject newcomp = Instantiate(componente, areaComponenti);
             newcomp.GetComponent<ComponentiReference>().nome.text = ingrediente.nome;
-            newcomp.GetComponent<ComponentiReference>().prezzo.text = $"{ingrediente.prezzo:F2}€";
+            newcomp.GetComponent<ComponentiReference>().prezzo.text = $"{ingrediente.prezzo:F2}â‚¬";
             listaComponenti.Add(newcomp);
         }
         if (inputField.text == "")
-            nome = "Baccalà";
+            nome = "Baccalï¿½";
         else
             nome = inputField.text;
         newPizza = ScriptableObject.CreateInstance<Pizza>();
@@ -50,7 +50,7 @@ public class Riepilogo : MonoBehaviour
         
         
         totPrezzo = newPizza.GetPrezzo();
-        testoprezzo.text = $"{totPrezzo:F2}€";
+        testoprezzo.text = $"{totPrezzo:F2}â‚¬";
     }
 
     public Pizza GetSelectedPizza()
@@ -75,7 +75,7 @@ public class Riepilogo : MonoBehaviour
             Debug.Log("Seleziona Almeno un Impasto per ordinare");
             return;
         }
-        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
+        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}â‚¬");
         
         TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
         Debug.Log(TavoloCorrenteRegistry.tavoloAttivo.nominativo + " contiene " + TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Count + " Pizze");
