@@ -66,6 +66,13 @@ public class SalaSelector : MonoBehaviour
                 tavolo.numeroPosti = t.numero_posti;
                 tavolo.disponibile = t.disponibile;
                 tavolo.postiOccupati = t.posti_occupati;
+                tavolo.cognomePrenotazione = t.cognome_prenotazione;
+                tavolo.orarioPrenotazione = t.orario_prenotazione;
+                    if (System.Enum.TryParse<StatoTavolo>(t.stato, out var parsedStato))
+                    tavolo.stato = parsedStato;
+                else
+                    tavolo.stato = StatoTavolo.Libero;
+
                 return tavolo;
             }).ToArray();
 
@@ -97,5 +104,12 @@ public class SalaSelector : MonoBehaviour
         public int numero_posti;
         public bool disponibile;
         public int posti_occupati;
+        public string stato;
+
+        public string cognome_prenotazione;     // ✅ aggiunto
+        public string orario_prenotazione;      // ✅ aggiunto
     }
+
+
+
 }

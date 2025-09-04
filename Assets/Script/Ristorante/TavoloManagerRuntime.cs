@@ -90,6 +90,11 @@ public class TavoloManagerRuntime : MonoBehaviour
             nuovoSO.disponibile = creato.disponibile;
             nuovoSO.postiOccupati = creato.posti_occupati;
             nuovoSO.salaId = salaId;
+            if (Enum.TryParse<StatoTavolo>(creato.stato, out var statoParsed))
+                nuovoSO.stato = statoParsed;
+            else
+                nuovoSO.stato = StatoTavolo.Libero; // fallback di sicurezza
+
 
             var lista = salaSelector.salaCorrente.tavoli?.ToList() ?? new System.Collections.Generic.List<Tavolo>();
             lista.Add(nuovoSO);
@@ -265,5 +270,7 @@ public static class JsonHelper
         public int sala_id;
         public string cognome_prenotazione;
         public string orario_prenotazione;
+        public string stato; // ✅ AGGIUNTO
+
     }
 }

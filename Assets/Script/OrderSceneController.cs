@@ -66,19 +66,25 @@ public class OrderSceneController : MonoBehaviour
 
     public void OnClickOrdina()
     {
-        StartCoroutine(SalvaOrdineNelDB());
+        StartCoroutine(SalvaOrdineNelDB(() =>
+        {
+            tavolo.stato = StatoTavolo.OrdineInviato;
+            StartCoroutine(AggiornaStatoOrdineInviato(tavolo.id));
+        }));
     }
 
-private void AggiornaPrezzoTotale()
-{
-    float totaleNuovo = tavolo.ListaPizzeOrdinate.Sum(p => p.GetPrezzo());
-    float totaleFinale = prezzoEsistente + totaleNuovo;
-    txtTotale.text = $"Totale: {totaleFinale:F2}€";
-}
+
+
+    private void AggiornaPrezzoTotale()
+    {
+        float totaleNuovo = tavolo.ListaPizzeOrdinate.Sum(p => p.GetPrezzo());
+        float totaleFinale = prezzoEsistente + totaleNuovo;
+        txtTotale.text = $"Totale: {totaleFinale:F2}€";
+    }
 
 
 
-private IEnumerator SalvaOrdineNelDB()
+private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
 {
     string urlPost = "http://localhost:3000/ordini";
 
@@ -122,15 +128,17 @@ private IEnumerator SalvaOrdineNelDB()
 
     yield return request.SendWebRequest();
 
-    if (request.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("❌ Errore salvataggio ordine: " + request.error +
-                       "\nRisposta: " + request.downloadHandler.text);
-    }
-    else
-    {
-        Debug.Log("✅ Ordine salvato nel DB: " + request.downloadHandler.text);
-        tavolo.ListaPizzeOrdinate.Clear(); // pulisco runtime
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore salvataggio ordine: " + request.error +
+                           "\nRisposta: " + request.downloadHandler.text);
+        }
+        else
+        {
+            Debug.Log("✅ Ordine salvato nel DB: " + request.downloadHandler.text);
+            tavolo.ListaPizzeOrdinate.Clear(); // pulisco runtime
+            onSuccess?.Invoke();
+
     }
 }
 
@@ -166,32 +174,54 @@ private IEnumerator SalvaOrdineNelDB()
         prezzoEsistente = ordine.prezzo_totale;
         AggiornaPrezzoTotale();
 }
+    private IEnumerator AggiornaStatoOrdineInviato(int tavoloId)
+    {
+        string url = $"http://localhost:3000/tavoli/{tavoloId}/ordine-inviato";
+
+        string json = @"{ ""stato"": ""OrdineInviato"" }";
+
+        UnityWebRequest req = UnityWebRequest.Put(url, json);
+        req.method = "PUT";
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+            Debug.LogError("❌ Errore update stato OrdineInviato: " + req.error);
+        else
+            Debug.Log("✅ Stato aggiornato a OrdineInviato nel DB");
+    }
 
 
-[System.Serializable]
-public class OrdineDB
-{
-    public int id;
-    public int tavolo_id;
-    public float prezzo_totale;
-    public string pizze;
-    public string prodotti;
-}
 
-[System.Serializable]
-public class PizzaWrapper
-{
-    public PizzaDTO[] array;
-}
+    [System.Serializable]
+    public class OrdineDB
+    {
+        public int id;
+        public int tavolo_id;
+        public float prezzo_totale;
+        public string pizze;
+        public string prodotti;
+    }
 
-private PizzaDTO[] ParsePizzeJson(string pizzeJson)
-{
-    if (string.IsNullOrEmpty(pizzeJson)) return new PizzaDTO[0];
-    string cleaned = pizzeJson.Replace("\\\"", "\"");
-    string wrapped = "{\"array\":" + cleaned + "}";
-    PizzaWrapper wrapper = JsonUtility.FromJson<PizzaWrapper>(wrapped);
-    return wrapper.array;
-}
+
+    [System.Serializable]
+    public class PizzaWrapper
+    {
+        public PizzaDTO[] array;
+    }
+
+
+    private PizzaDTO[] ParsePizzeJson(string pizzeJson)
+    {
+        if (string.IsNullOrEmpty(pizzeJson)) return new PizzaDTO[0];
+        string cleaned = pizzeJson.Replace("\\\"", "\"");
+        string wrapped = "{\"array\":" + cleaned + "}";
+        PizzaWrapper wrapper = JsonUtility.FromJson<PizzaWrapper>(wrapped);
+        return wrapper.array;
+    }
+
 
 
 }

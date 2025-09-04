@@ -77,6 +77,8 @@ public class TavoloPrenotazioneView : MonoBehaviour
             tavoloCorrente.postiOccupati = persone;
             tavoloCorrente.cognomePrenotazione = cognome;
             tavoloCorrente.orarioPrenotazione = orario;
+            tavoloCorrente.stato = StatoTavolo.Prenotato;
+
 
             // 🔹 Salva nel DB
             StartCoroutine(SalvaPrenotazioneNelDB(tavoloCorrente.id, persone, cognome, orario));
@@ -106,9 +108,11 @@ public class TavoloPrenotazioneView : MonoBehaviour
             ""disponibile"": false,
             ""posti_occupati"": {persone},
             ""cognome_prenotazione"": ""{cognome}"",
-            ""orario_prenotazione"": ""{orario}""
-        }}";
+            ""orario_prenotazione"": ""{orario}"",
+            ""stato"": ""Prenotato""
 
+        }}";
+        Debug.Log(json);
         UnityWebRequest request = UnityWebRequest.Put(url, json);
         request.method = "PUT";
         request.SetRequestHeader("Content-Type", "application/json");

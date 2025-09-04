@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class TavoloView : MonoBehaviour
 {
@@ -12,12 +13,14 @@ public class TavoloView : MonoBehaviour
     [Header("Bottoni")]
     public Button liberaButton;
     public Button modificaButton;
+    public TavoloOrdiniOpener tavoloOrdiniOpener; // assegna via Inspector
+
 
     private Tavolo data;
     private TavoloDettaglioView dettaglioUI;
     private TavoloPrenotazioneView prenotazioneUI;
     private TavoloFormUI tavoloFormUI;
-    private TavoloManagerRuntime tavoloManager; // ✅ nuovo
+    private TavoloManagerRuntime tavoloManager;
 
     public void Bind(
         Tavolo tavolo,
@@ -39,24 +42,7 @@ public class TavoloView : MonoBehaviour
         if (btn != null)
         {
             btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() =>
-            {
-                if (data.disponibile)
-                {
-                    prenotazioneUI.Apri(data,
-                        (persone, cognome, orario) =>
-                        {
-                            Debug.Log($"Prenotato {data.nominativo} da {cognome} alle {orario} per {persone} persone");
-                            AggiornaUI();
-                        },
-                        () => Debug.Log("Prenotazione annullata")
-                    );
-                }
-                else
-                {
-                    dettaglioUI.MostraDettaglio(data);
-                }
-            });
+            btn.onClick.AddListener(OnTavoloClicked);
         }
 
         if (liberaButton != null)
@@ -76,15 +62,63 @@ public class TavoloView : MonoBehaviour
 
                     tavoloFormUI.ApriPerModifica(data, (nuovoNome, nuoviPosti) =>
                     {
-                        // chiamiamo il manager per aggiornare il tavolo nel DB
                         tavoloManager.AggiornaTavoloNelDB(data.id, nuovoNome, nuoviPosti);
-
                     },
                     () => Debug.Log("Modifica tavolo annullata"));
                 }
             });
         }
     }
+
+    private void OnTavoloClicked()
+    {
+        if (data == null) return;
+
+        if (data.stato == StatoTavolo.Aperto)
+        {
+            if (tavoloOrdiniOpener != null)
+            {
+                tavoloOrdiniOpener.Bind(data);
+                tavoloOrdiniOpener.apriButton.onClick.Invoke(); // forza il click
+            }
+            else
+            {
+                // fallback (non consigliato)
+                TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
+                SceneManager.LoadScene("OrdiniScene");
+            }
+        }
+        else if (data.stato == StatoTavolo.OrdineInviato)
+        {
+            if (tavoloOrdiniOpener != null)
+            {
+                tavoloOrdiniOpener.Bind(data);
+                tavoloOrdiniOpener.apriButton.onClick.Invoke(); // forza il click
+            }
+            else
+            {
+                // fallback (non consigliato)
+                TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
+                SceneManager.LoadScene("OrdiniScene");
+            }
+        }
+        else if (data.stato == StatoTavolo.Prenotato)
+        {
+            dettaglioUI.MostraDettaglio(data);
+        }
+        else if (data.stato == StatoTavolo.Libero)
+        {
+            prenotazioneUI.Apri(data,
+                (persone, cognome, orario) =>
+                {
+                    Debug.Log($"Prenotato {data.nominativo} da {cognome} alle {orario} per {persone} persone");
+                    AggiornaUI();
+                },
+                () => Debug.Log("Prenotazione annullata")
+            );
+        }
+    }
+
 
     public void AggiornaUI()
     {
@@ -94,46 +128,58 @@ public class TavoloView : MonoBehaviour
             ? $"Tavolo {data.id}"
             : data.nominativo;
 
-        if (data.disponibile)
+        switch (data.stato)
         {
-            statoTxt.text = $"Libero\n({data.numeroPosti} posti)";
-            if (background != null) background.color = new Color(0.7f, 1f, 0.7f);
+            case StatoTavolo.Libero:
+                statoTxt.text = $"Libero\n({data.numeroPosti} posti)";
+                if (background != null) background.color = Color.gray;
+                if (liberaButton != null) liberaButton.gameObject.SetActive(false);
+                if (modificaButton != null) modificaButton.gameObject.SetActive(true);
+                break;
 
-            if (liberaButton != null) liberaButton.gameObject.SetActive(false);
-            if (modificaButton != null) modificaButton.gameObject.SetActive(true);
-        }
-        else
-        {
-            statoTxt.text = $"Occupato\n{data.postiOccupati}/{data.numeroPosti}";
-            if (background != null) background.color = new Color(1f, 0.8f, 0.6f);
+            case StatoTavolo.Prenotato:
+                statoTxt.text = $"{data.cognomePrenotazione}\nOre {data.orarioPrenotazione}\n{data.postiOccupati}/{data.numeroPosti}";
+                if (background != null) background.color = Color.yellow;
+                if (liberaButton != null) liberaButton.gameObject.SetActive(true);
+                if (modificaButton != null) modificaButton.gameObject.SetActive(false);
+                break;
 
-            if (liberaButton != null) liberaButton.gameObject.SetActive(true);
-            if (modificaButton != null) modificaButton.gameObject.SetActive(false);
+            case StatoTavolo.Aperto:
+                statoTxt.text = $"Aperto\n{data.postiOccupati}/{data.numeroPosti}";
+                if (background != null) background.color = Color.green;
+                if (liberaButton != null) liberaButton.gameObject.SetActive(true);
+                if (modificaButton != null) modificaButton.gameObject.SetActive(false);
+                break;
+            case StatoTavolo.OrdineInviato:
+                statoTxt.text = "Ordine Inviato";
+                background.color = Color.blue; // o altro colore distintivo
+                liberaButton?.gameObject.SetActive(false);
+                modificaButton?.gameObject.SetActive(false);
+                break;
+
+
         }
+        
+    }
+
+    private void LiberaTavolo()
+    {
+        if (data == null) return;
+
+        data.stato = StatoTavolo.Libero;
+        data.postiOccupati = 0;
+        data.cognomePrenotazione = "";
+        data.orarioPrenotazione = "";
+
+        if (tavoloManager != null)
+            tavoloManager.LiberaTavoloNelDB(data.id);
+
+        AggiornaUI();
+        Debug.Log($"{data.nominativo} è stato liberato!");
     }
 
     void Update()
     {
         AggiornaUI();
     }
-
-private void LiberaTavolo()
-{
-    if (data == null) return;
-
-    data.disponibile = true;
-    data.postiOccupati = 0;
-    data.cognomePrenotazione = "";
-    data.orarioPrenotazione = "";
-
-    // 🔹 Chiamata al DB tramite manager
-    if (tavoloManager != null)
-    {
-        tavoloManager.LiberaTavoloNelDB(data.id);
-    }
-
-    AggiornaUI();
-    Debug.Log($"{data.nominativo} è stato liberato!");
-}
-
 }

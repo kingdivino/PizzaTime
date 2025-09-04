@@ -20,10 +20,10 @@ public class Tavolo : ScriptableObject
     public Sprite Table;
     public string cognomePrenotazione;   // es. "Rossi"
     public string orarioPrenotazione;    // es. "20:30"
-    
+    public StatoTavolo stato;
 
-    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato, 
-        DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate, 
+    public Tavolo(int id, string nominativo, int numeroPosti, bool disponibile, int postiOccupati, TimeSpan tempoOccupato,
+        DateTime dataOccupazione, Time timestampOrdinazione, Prodotto[] prodottiOrdinati, Pizza[] pizzeOrdinate,
         Sprite table, string cognomePrenotazione, string orarioPrenotazione)
     {
         this.id = id;
@@ -40,4 +40,11 @@ public class Tavolo : ScriptableObject
         this.orarioPrenotazione = orarioPrenotazione;
     }
 
+}
+public enum StatoTavolo
+{
+    Libero,
+    Prenotato,
+    Aperto,
+    OrdineInviato
 }

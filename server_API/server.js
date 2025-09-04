@@ -137,45 +137,40 @@ app.delete("/tavoli/:id", (req, res) => {
     res.json({ message: "Tavolo eliminato con successo" });
   });
 });
-
-// PUT /tavoli/:id → aggiorna prenotazione o altri campi
 app.put("/tavoli/:id/prenota", (req, res) => {
-  const id = req.params.id;
-  const { disponibile, posti_occupati, cognome_prenotazione, orario_prenotazione, nominativo, numero_posti } = req.body;
+  const tavoloId = req.params.id;
+  const {
+    disponibile,
+    posti_occupati,
+    cognome_prenotazione,
+    orario_prenotazione,
+    stato
+  } = req.body;
 
   const query = `
-    UPDATE Tavoli
-    SET 
+    UPDATE Tavoli SET
       disponibile = ?,
       posti_occupati = ?,
       cognome_prenotazione = ?,
       orario_prenotazione = ?,
-      nominativo = COALESCE(?, nominativo),
-      numero_posti = COALESCE(?, numero_posti)
+      stato = ?
     WHERE id = ?
   `;
 
   db.query(
     query,
-    [
-      disponibile,
-      posti_occupati,
-      cognome_prenotazione,
-      orario_prenotazione,
-      nominativo,
-      numero_posti,
-      id
-    ],
+    [disponibile, posti_occupati, cognome_prenotazione, orario_prenotazione, stato, tavoloId],
     (err, result) => {
       if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Errore aggiornamento DB" });
+        console.error("❌ Errore prenotazione tavolo:", err);
+        return res.status(500).json({ error: "Errore DB" });
       }
 
-      res.json({ success: true, updated: result.affectedRows });
+      res.json({ success: true, message: "Tavolo prenotato correttamente" });
     }
   );
 });
+
 
 
 // GET /tavoli/nominativi?salaId=2
@@ -189,8 +184,6 @@ app.get("/tavoli/nominativi", (req, res) => {
     });
 });
 
-// PUT /tavoli/:id/prenota
-// PUT /tavoli/:id/libera → libera il tavolo
 app.put("/tavoli/:id/libera", (req, res) => {
   const id = req.params.id;
 
@@ -200,7 +193,8 @@ app.put("/tavoli/:id/libera", (req, res) => {
       disponibile = true,
       posti_occupati = 0,
       cognome_prenotazione = '',
-      orario_prenotazione = ''
+      orario_prenotazione = '',
+      stato = 'Libero'
     WHERE id = ?
   `;
 
@@ -213,6 +207,26 @@ app.put("/tavoli/:id/libera", (req, res) => {
     res.json({ success: true, updated: result.affectedRows });
   });
 });
+app.put("/tavoli/:id/apri", (req, res) => {
+  const id = req.params.id;
+  const { stato, posti_occupati } = req.body;
+
+  const query = `
+    UPDATE Tavoli
+    SET stato = ?, posti_occupati = ?
+    WHERE id = ?
+  `;
+
+  db.query(query, [stato, posti_occupati, id], (err, result) => {
+    if (err) {
+      console.error("Errore apertura tavolo:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json({ success: true, updated: result.affectedRows });
+  });
+});
+
 
 // GET /tavoli/:id → dettagli tavolo
 app.get("/tavoli/:id", (req, res) => {
@@ -296,7 +310,7 @@ app.post("/ordini", (req, res) => {
 
       const updateQuery = `
         UPDATE Ordini 
-        SET prezzo_totale = ?, pizze = ?, prodotti = ?
+        SET prezzo_totale = ?, pizze = ?, prodotti = ?, orario_ordine = NOW()
         WHERE tavolo_id = ?`;
 
       db.query(
@@ -311,9 +325,11 @@ app.post("/ordini", (req, res) => {
         }
       );
     } else {
-      const insertQuery = `
-        INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti)
-        VALUES (?, ?, ?, ?)`;
+        const insertQuery = `
+          INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti, orario_ordine)
+          VALUES (?, ?, ?, ?, NOW())
+        `;
+
 
       db.query(
         insertQuery,
@@ -354,6 +370,32 @@ app.get("/ordini", (req, res) => {
     res.json(results[0] || {});
   });
 });
+
+// PUT /tavoli/:id/ordine-inviato
+app.put("/tavoli/:id/ordine-inviato", (req, res) => {
+  const id = req.params.id;
+  const { stato } = req.body;
+
+  if (!stato || stato !== "OrdineInviato") {
+    return res.status(400).json({ error: "Valore 'stato' non valido o mancante" });
+  }
+
+  const query = `
+    UPDATE Tavoli
+    SET stato = ?
+    WHERE id = ?
+  `;
+
+  db.query(query, [stato, id], (err, result) => {
+    if (err) {
+      console.error("❌ Errore update stato OrdineInviato:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json({ success: true, updated: result.affectedRows });
+  });
+});
+
 
 // avvio server
 app.listen(3000, () => {
