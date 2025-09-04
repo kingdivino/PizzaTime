@@ -2000,6 +2000,32 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 934015317779167916, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
   m_PrefabInstance: {fileID: 6709184739533383646}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1182458418 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2372865978141392197, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
+  m_PrefabInstance: {fileID: 6709184739533383646}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182458409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1182458423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182458409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36eaea840886d9c43852a429cb2ffc5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  apriButton: {fileID: 1182458418}
+  salaSelector: {fileID: 819890374}
+  scenaOrdini: OrdiniScene
 --- !u!1 &1244964463 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8851496052105789270, guid: 97f5f9242b93996428ca0e015e425cab, type: 3}
@@ -2020,6 +2046,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1251115110}
   - component: {fileID: 1251115109}
+  - component: {fileID: 1251115111}
   m_Layer: 0
   m_Name: TavoloManager
   m_TagString: Untagged
@@ -2061,6 +2088,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1251115111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251115108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36eaea840886d9c43852a429cb2ffc5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  apriButton: {fileID: 0}
+  salaSelector: {fileID: 0}
+  scenaOrdini: OrdiniScene
 --- !u!1 &1291592361
 GameObject:
   m_ObjectHideFlags: 0
@@ -3092,10 +3134,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   contenitoreTavoli: {fileID: 1341619738}
   tavoloPrefab: {fileID: 1182458409}
+  addTavoloButton: {fileID: 1400280425}
   dettaglioUI: {fileID: 4906792021125046883}
   tavoloFormUI: {fileID: 2082621432}
   prenotazioneUI: {fileID: 447051739}
-  addTavoloButton: {fileID: 1400280425}
   tavoloManager: {fileID: 1251115109}
 --- !u!114 &2074028669
 MonoBehaviour:
@@ -3269,6 +3311,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6391350}
     m_Modifications:
+    - target: {fileID: 1075226883196399921, guid: 832590d104da31a49853618a9cebb562, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 445.29004
+      objectReference: {fileID: 0}
     - target: {fileID: 2437741352259439004, guid: 832590d104da31a49853618a9cebb562, type: 3}
       propertyPath: salaSelector
       value: 
@@ -4220,6 +4266,10 @@ PrefabInstance:
       propertyPath: modificaButton
       value: 
       objectReference: {fileID: 713400924}
+    - target: {fileID: 3036562763020783924, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
+      propertyPath: tavoloOrdiniOpener
+      value: 
+      objectReference: {fileID: 1182458423}
     - target: {fileID: 3202760969224242878, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -4303,7 +4353,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6355124475197991927, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1182458423}
   m_SourcePrefab: {fileID: 100100000, guid: 5d933ee208445d349b9e464b8b57a74f, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

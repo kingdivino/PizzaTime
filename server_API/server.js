@@ -396,6 +396,26 @@ app.put("/tavoli/:id/ordine-inviato", (req, res) => {
   });
 });
 
+// GET /ordini/inviati
+app.get("/ordini/inviati", (req, res) => {
+  const query = `
+    SELECT O.*, T.nominativo AS tavolo_nome
+    FROM Ordini O
+    JOIN Tavoli T ON O.tavolo_id = T.id
+    WHERE T.stato = 'OrdineInviato'
+    ORDER BY O.orario_ordine ASC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Errore DB ordini inviati:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json(results); // array di ordini con tavolo_nome incluso
+  });
+});
+
 
 // avvio server
 app.listen(3000, () => {
