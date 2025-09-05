@@ -112,6 +112,13 @@ public class CassaSceneController : MonoBehaviour
 
         Debug.Log("✅ Ordini chiusi/cancellati");
 
+        Tavolo tavolo = TavoloCorrenteRegistry.tavoloAttivo;
+        if (tavolo != null)
+        {
+            SalaCorrenteRegistry.salaIdAttiva = tavolo.salaId;
+            Debug.Log($"✅ Impostato SalaCorrenteRegistry.salaIdAttiva a {tavolo.salaId}");
+        }
+
         // 3. Torna alla scena sala
         SceneManager.LoadScene("Ristorante");
     }

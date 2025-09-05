@@ -243,9 +243,10 @@ private void AggiornaStatoVisuale(string stato)
     }
 }
 
-private void RefreshStatoOrdine()
-{
-    StartCoroutine(CaricaUltimoStatoOrdine(tavolo.id));
+    private void RefreshStatoOrdine()
+    {
+        StartCoroutine(CaricaUltimoStatoOrdine(tavolo.id));
+        StartCoroutine(VerificaPrioritàOrdineEAvviaPreparazione(tavolo.id));
 }
 
     private IEnumerator CaricaUltimoStatoOrdine(int tavoloId)
@@ -271,6 +272,78 @@ private void RefreshStatoOrdine()
             AggiornaStatoVisuale(ultimo.stato);
         }
     }
+
+private IEnumerator VerificaPrioritàOrdineEAvviaPreparazione(int tavoloId)
+{
+    string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+    UnityWebRequest req = UnityWebRequest.Get(url);
+    yield return req.SendWebRequest();
+
+    if (req.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("❌ Errore nel recupero ordini: " + req.error);
+        yield break;
+    }
+
+    OrdineDB[] ordiniTavolo = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
+    var ordineAttivo = ordiniTavolo.LastOrDefault(o => o.stato != "Consegnato");
+
+    if (ordineAttivo == null)
+    {
+        Debug.Log("⚠️ Nessun ordine attivo da valutare.");
+        yield break;
+    }
+
+    // 🔹 Carichiamo tutti gli ordini dalla cucina ordinati cronologicamente
+    string allUrl = "http://localhost:3000/ordini/inviati";
+    UnityWebRequest allReq = UnityWebRequest.Get(allUrl);
+    yield return allReq.SendWebRequest();
+
+    if (allReq.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("❌ Errore nel recupero ordini globali: " + allReq.error);
+        yield break;
+    }
+
+    OrdineDB[] ordiniInviati = JsonHelper.FromJson<OrdineDB>(allReq.downloadHandler.text);
+
+    // 🔎 Ordina per orario e prendi i primi 3
+    var primiTre = ordiniInviati
+        .Where(o => o.stato == "InAttesa" || o.stato == "OrdineInviato" || o.stato == "RichiestaConto" || o.stato == "InPreparazione")
+        .OrderBy(o => o.orario_ordine)
+        .Take(3)
+        .ToList();
+
+    if (primiTre.Any(o => o.id == ordineAttivo.id))
+    {
+        Debug.Log($"📦 Ordine {ordineAttivo.id} è tra i primi 3 → lo mettiamo in preparazione");
+
+        // aggiorna stato nel DB
+        string updateUrl = $"http://localhost:3000/ordini/{ordineAttivo.id}/stato";
+        string json = $@"{{ ""stato"": ""InPreparazione"" }}";
+
+        UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
+        updateReq.method = "PUT";
+        updateReq.SetRequestHeader("Content-Type", "application/json");
+        updateReq.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return updateReq.SendWebRequest();
+
+        if (updateReq.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore aggiornamento stato: " + updateReq.error);
+        }
+        else
+        {
+            Debug.Log($"✅ Ordine {ordineAttivo.id} aggiornato a InPreparazione");
+        }
+    }
+    else
+    {
+        Debug.Log($"ℹ️ Ordine {ordineAttivo.id} NON è tra i primi 3 → resta in attesa");
+    }
+}
+
 
     private IEnumerator AggiornaStatoUltimoOrdine(int tavoloId, string nuovoStato)
     {
