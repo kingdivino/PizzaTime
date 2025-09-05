@@ -4,22 +4,22 @@ using UnityEngine.UI;
 
 public class HomePageController : MonoBehaviour
 {
-    public Button clienteButton;
-    public Button staffButton;
+    public Button RistoranteButton;
+    public Button PizzeriaButton;
 
     void Start()
     {
-        clienteButton.onClick.AddListener(GoToCliente);
-        staffButton.onClick.AddListener(GoToStaff);
+        RistoranteButton.onClick.AddListener(GoToCliente);
+        PizzeriaButton.onClick.AddListener(GoToStaff);
     }
 
     public void GoToCliente()
     {
-        SceneManager.LoadScene("ClienteScene");
+        SceneManager.LoadScene("Ristorante");
     }
 
     public void GoToStaff()
     {
-        SceneManager.LoadScene("StaffScene");
+        SceneManager.LoadScene("Pizzeria");
     }
 }
