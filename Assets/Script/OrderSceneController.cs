@@ -21,7 +21,12 @@ public class OrderSceneController : MonoBehaviour
     public GameObject rigaPizza;
 
     private Tavolo tavolo;
+    private string statoOrdineCorrente = "";
+
     private float prezzoEsistente = 0f;
+
+    
+    public TextMeshProUGUI txtStatoOrdine; // 🟢 Drag & drop in Inspector
 
     void Start()
 {
@@ -60,6 +65,8 @@ public class OrderSceneController : MonoBehaviour
             comp.ingredienti.text = "Impasto:" + p.impasto + "\nIngredienti: " + p.ingredienti.ToCommaSeparatedString();
         }
     }
+    InvokeRepeating(nameof(RefreshStatoOrdine), 5f, 5f); // ogni 5 secondi
+
     AggiornaPrezzoTotale();
 }
 
@@ -69,9 +76,18 @@ public class OrderSceneController : MonoBehaviour
         StartCoroutine(SalvaOrdineNelDB(() =>
         {
             tavolo.stato = StatoTavolo.OrdineInviato;
-            StartCoroutine(AggiornaStatoOrdineInviato(tavolo.id));
+            StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
         }));
     }
+
+    public void onClickRichiediConto()
+    {
+        tavolo.stato = StatoTavolo.RichiestaConto;
+        StartCoroutine(AggiornaStatoTavolo(tavolo.id, "RichiestaConto"));
+        StartCoroutine(AggiornaStatoUltimoOrdine(tavolo.id, "RichiestaConto"));
+    }
+
+
 
 
 
@@ -143,23 +159,27 @@ private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
 }
 
 
-    private IEnumerator CaricaOrdineEsistente(int tavoloId)
+private IEnumerator CaricaOrdineEsistente(int tavoloId)
+{
+    string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+
+    UnityWebRequest req = UnityWebRequest.Get(url);
+    yield return req.SendWebRequest();
+
+    if (req.result != UnityWebRequest.Result.Success)
     {
-        string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+        Debug.LogError("❌ Errore caricamento ordine: " + req.error);
+        yield break;
+    }
 
-        UnityWebRequest req = UnityWebRequest.Get(url);
-        yield return req.SendWebRequest();
+    string json = req.downloadHandler.text;
+    Debug.Log("📥 Ordine JSON: " + json);
 
-        if (req.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("❌ Errore caricamento ordine: " + req.error);
-            yield break;
-        }
+    // ✅ Usa JsonHelper per leggere array
+    OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(json);
 
-        string json = req.downloadHandler.text;
-        Debug.Log("📥 Ordine JSON: " + json);
-
-        OrdineDB ordine = JsonUtility.FromJson<OrdineDB>(json);
+    foreach (var ordine in ordini)
+    {
         PizzaDTO[] pizze = ParsePizzeJson(ordine.pizze);
 
         foreach (var pizza in pizze)
@@ -171,26 +191,125 @@ private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
             comp.prezzo.text = $"{pizza.prezzo:F2}€";
             comp.ingredienti.text = $"Impasto: {pizza.impasto_nome}\nIngredienti: {string.Join(", ", pizza.ingredienti ?? new string[0])}";
         }
-        prezzoEsistente = ordine.prezzo_totale;
-        AggiornaPrezzoTotale();
+
+        prezzoEsistente += ordine.prezzo_totale;
+    }
+
+    AggiornaPrezzoTotale();
 }
-    private IEnumerator AggiornaStatoOrdineInviato(int tavoloId)
+
+   private IEnumerator AggiornaStatoTavolo(int tavoloId, string nuovoStato)
+{
+    string url = $"http://localhost:3000/tavoli/{tavoloId}/stato";
+
+    string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
+
+    UnityWebRequest req = UnityWebRequest.Put(url, json);
+    req.method = "PUT";
+    req.SetRequestHeader("Content-Type", "application/json");
+    req.downloadHandler = new DownloadHandlerBuffer();
+
+    yield return req.SendWebRequest();
+
+    if (req.result != UnityWebRequest.Result.Success)
+        Debug.LogError($"❌ Errore aggiornamento stato '{nuovoStato}' per tavolo {tavoloId}: " + req.error);
+    else
+        Debug.Log($"✅ Stato tavolo {tavoloId} aggiornato a '{nuovoStato}'");
+}
+
+private void AggiornaStatoVisuale(string stato)
+{
+    if (txtStatoOrdine == null) return;
+
+    txtStatoOrdine.text = $"Stato ordine: {stato}";
+
+    switch (stato)
     {
-        string url = $"http://localhost:3000/tavoli/{tavoloId}/ordine-inviato";
+        case "InAttesa":
+            txtStatoOrdine.color = Color.yellow; // 🟡
+            break;
+        case "InPreparazione":
+            txtStatoOrdine.color = new Color(1f, 0.6f, 0f); // 🟠 arancione
+            break;
+        case "Consegnato":
+            txtStatoOrdine.color = Color.green; // 🟢
+            break;
+        case "Annullato":
+            txtStatoOrdine.color = Color.red; // 🔴
+            break;
+        default:
+            txtStatoOrdine.color = Color.white; // ⚪ fallback
+            break;
+    }
+}
 
-        string json = @"{ ""stato"": ""OrdineInviato"" }";
+private void RefreshStatoOrdine()
+{
+    StartCoroutine(CaricaUltimoStatoOrdine(tavolo.id));
+}
 
-        UnityWebRequest req = UnityWebRequest.Put(url, json);
-        req.method = "PUT";
-        req.SetRequestHeader("Content-Type", "application/json");
-        req.downloadHandler = new DownloadHandlerBuffer();
-
+    private IEnumerator CaricaUltimoStatoOrdine(int tavoloId)
+    {
+        string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+        UnityWebRequest req = UnityWebRequest.Get(url);
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success)
-            Debug.LogError("❌ Errore update stato OrdineInviato: " + req.error);
+        {
+            Debug.LogError("❌ Errore refresh stato: " + req.error);
+            yield break;
+        }
+
+        string json = req.downloadHandler.text;
+        OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(json);
+
+        // 🔄 Mostra lo stato dell'ultimo ordine (o il più recente "non consegnato")
+        var ultimo = ordini.LastOrDefault();
+        if (ultimo != null && ultimo.stato != statoOrdineCorrente)
+        {
+            statoOrdineCorrente = ultimo.stato;
+            AggiornaStatoVisuale(ultimo.stato);
+        }
+    }
+
+    private IEnumerator AggiornaStatoUltimoOrdine(int tavoloId, string nuovoStato)
+    {
+        // recupera l’ultimo ordine NON consegnato
+        string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+
+        UnityWebRequest req = UnityWebRequest.Get(url);
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore nel recupero ordine: " + req.error);
+            yield break;
+        }
+
+        OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
+        var ultimoAttivo = ordini.LastOrDefault(o => o.stato != "Consegnato");
+
+        if (ultimoAttivo == null)
+        {
+            Debug.LogWarning("⚠️ Nessun ordine attivo da aggiornare.");
+            yield break;
+        }
+
+        // ora aggiorna lo stato
+        string updateUrl = $"http://localhost:3000/ordini/{ultimoAttivo.id}/stato";
+        string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
+
+        UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
+        updateReq.method = "PUT";
+        updateReq.SetRequestHeader("Content-Type", "application/json");
+        updateReq.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return updateReq.SendWebRequest();
+
+        if (updateReq.result != UnityWebRequest.Result.Success)
+            Debug.LogError("❌ Errore aggiornamento stato ordine: " + updateReq.error);
         else
-            Debug.Log("✅ Stato aggiornato a OrdineInviato nel DB");
+            Debug.Log($"✅ Stato ordine {ultimoAttivo.id} aggiornato a '{nuovoStato}'");
     }
 
 
@@ -203,7 +322,11 @@ private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
         public float prezzo_totale;
         public string pizze;
         public string prodotti;
+        public string stato;
+        public string orario_ordine;
     }
+
+
 
 
     [System.Serializable]
@@ -222,6 +345,20 @@ private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
         return wrapper.array;
     }
 
+    public static class JsonHelper
+{
+    public static T[] FromJson<T>(string json)
+    {
+        string newJson = "{ \"array\": " + json + "}";
+        return JsonUtility.FromJson<Wrapper<T>>(newJson).array;
+    }
+
+    [System.Serializable]
+    private class Wrapper<T>
+    {
+        public T[] array;
+    }
+}
 
 
 }

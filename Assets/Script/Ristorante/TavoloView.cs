@@ -70,12 +70,14 @@ public class TavoloView : MonoBehaviour
         }
     }
 
-    private void OnTavoloClicked()
-    {
-        if (data == null) return;
+private void OnTavoloClicked()
+{
+    if (data == null) return;
 
-        if (data.stato == StatoTavolo.Aperto)
-        {
+    switch (data.stato)
+    {
+        case StatoTavolo.Aperto:
+        case StatoTavolo.OrdineInviato:
             if (tavoloOrdiniOpener != null)
             {
                 tavoloOrdiniOpener.Bind(data);
@@ -83,41 +85,36 @@ public class TavoloView : MonoBehaviour
             }
             else
             {
-                // fallback (non consigliato)
                 TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
                 SceneManager.LoadScene("OrdiniScene");
             }
-        }
-        else if (data.stato == StatoTavolo.OrdineInviato)
-        {
-            if (tavoloOrdiniOpener != null)
-            {
-                tavoloOrdiniOpener.Bind(data);
-                tavoloOrdiniOpener.apriButton.onClick.Invoke(); // forza il click
-            }
-            else
-            {
-                // fallback (non consigliato)
-                TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
-                SceneManager.LoadScene("OrdiniScene");
-            }
-        }
-        else if (data.stato == StatoTavolo.Prenotato)
-        {
+            break;
+
+        case StatoTavolo.Prenotato:
             dettaglioUI.MostraDettaglio(data);
-        }
-        else if (data.stato == StatoTavolo.Libero)
-        {
+            break;
+
+        case StatoTavolo.Libero:
             prenotazioneUI.Apri(data,
                 (persone, cognome, orario) =>
                 {
                     Debug.Log($"Prenotato {data.nominativo} da {cognome} alle {orario} per {persone} persone");
                     AggiornaUI();
                 },
-                () => Debug.Log("Prenotazione annullata")
-            );
-        }
+                () => Debug.Log("Prenotazione annullata"));
+            break;
+
+        case StatoTavolo.RichiestaConto:
+            TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
+            SceneManager.LoadScene("Cassa");
+            break;
+
+        default:
+            Debug.LogWarning($"⚠️ Stato tavolo non gestito: {data.stato}");
+            break;
     }
+}
+
 
 
     public void AggiornaUI()
@@ -157,7 +154,12 @@ public class TavoloView : MonoBehaviour
                 modificaButton?.gameObject.SetActive(false);
                 break;
 
-
+            case StatoTavolo.RichiestaConto:
+                statoTxt.text = "Conto Richiesto";
+                background.color = new Color(1f, 0.5f, 0f); // arancione
+                liberaButton?.gameObject.SetActive(false);
+                modificaButton?.gameObject.SetActive(false);
+                break;
         }
         
     }

@@ -46,5 +46,6 @@ public enum StatoTavolo
     Libero,
     Prenotato,
     Aperto,
-    OrdineInviato
+    OrdineInviato,
+    RichiestaConto,
 }

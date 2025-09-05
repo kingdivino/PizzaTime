@@ -285,7 +285,7 @@ app.post("/pizze", (req, res) => {
 app.post("/ordini", (req, res) => {
   const { tavolo_id, prezzo_totale, pizze, prodotti } = req.body;
 
-  const selectQuery = "SELECT * FROM Ordini WHERE tavolo_id = ? LIMIT 1";
+  const selectQuery = "SELECT * FROM Ordini WHERE tavolo_id = ?  AND stato ='inAttesa' LIMIT 1";
   db.query(selectQuery, [tavolo_id], (err, results) => {
     if (err) {
       console.error("❌ Errore SELECT:", err);
@@ -359,7 +359,6 @@ app.get("/ordini", (req, res) => {
   const query = `
     SELECT * FROM Ordini
     WHERE tavolo_id = ?
-    LIMIT 1
   `;
 
   db.query(query, [tavoloId], (err, results) => {
@@ -367,17 +366,18 @@ app.get("/ordini", (req, res) => {
       console.error("❌ Errore DB:", err);
       return res.status(500).json({ error: "Errore DB" });
     }
-    res.json(results[0] || {});
+    res.json(results);
   });
 });
 
 // PUT /tavoli/:id/ordine-inviato
-app.put("/tavoli/:id/ordine-inviato", (req, res) => {
+// PUT /tavoli/:id/stato
+app.put("/tavoli/:id/stato", (req, res) => {
   const id = req.params.id;
   const { stato } = req.body;
 
-  if (!stato || stato !== "OrdineInviato") {
-    return res.status(400).json({ error: "Valore 'stato' non valido o mancante" });
+  if (!stato) {
+    return res.status(400).json({ error: "Campo 'stato' mancante" });
   }
 
   const query = `
@@ -388,7 +388,7 @@ app.put("/tavoli/:id/ordine-inviato", (req, res) => {
 
   db.query(query, [stato, id], (err, result) => {
     if (err) {
-      console.error("❌ Errore update stato OrdineInviato:", err);
+      console.error("❌ Errore aggiornamento stato tavolo:", err);
       return res.status(500).json({ error: "Errore DB" });
     }
 
@@ -396,23 +396,60 @@ app.put("/tavoli/:id/ordine-inviato", (req, res) => {
   });
 });
 
+
 // GET /ordini/inviati
 app.get("/ordini/inviati", (req, res) => {
   const query = `
-    SELECT O.*, T.nominativo AS tavolo_nome
-    FROM Ordini O
-    JOIN Tavoli T ON O.tavolo_id = T.id
-    WHERE T.stato = 'OrdineInviato'
-    ORDER BY O.orario_ordine ASC
+    SELECT o.*, t.nominativo AS tavolo_nome
+    FROM Ordini o
+    JOIN Tavoli t ON t.id = o.tavolo_id
+    WHERE o.stato != 'Consegnato'
+    ORDER BY o.orario_ordine ASC
   `;
 
   db.query(query, (err, results) => {
     if (err) {
-      console.error("❌ Errore DB ordini inviati:", err);
+      console.error("❌ Errore DB:", err);
       return res.status(500).json({ error: "Errore DB" });
     }
 
-    res.json(results); // array di ordini con tavolo_nome incluso
+    res.json(results);
+  });
+});
+
+
+app.put("/ordini/:id/stato", (req, res) => {
+  const ordineId = req.params.id;
+  const { stato } = req.body;
+
+  const query = `
+    UPDATE Ordini
+    SET stato = ?
+    WHERE id = ?
+  `;
+
+  db.query(query, [stato, ordineId], (err, result) => {
+    if (err) {
+      console.error("❌ Errore aggiornamento stato ordine:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    res.json({ success: true, updated: result.affectedRows });
+  });
+});
+
+// DELETE /ordini/chiudi?tavoloId=3
+app.delete("/ordini/chiudi", (req, res) => {
+  const tavoloId = req.query.tavoloId;
+  if (!tavoloId) return res.status(400).json({ error: "tavoloId mancante" });
+
+  const query = `DELETE FROM Ordini WHERE tavolo_id = ?`;
+  db.query(query, [tavoloId], (err, result) => {
+    if (err) {
+      console.error("❌ Errore DELETE ordini:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+    res.json({ success: true, deleted: result.affectedRows });
   });
 });
 

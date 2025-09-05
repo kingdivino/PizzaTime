@@ -11,7 +11,14 @@ public class PizzeriaSceneController : MonoBehaviour
     public GameObject prefabOrdine;
     public GameObject prefabRigaPizza;
 
+    private float tempoAggiornamento = 5f; // ⏱ ogni 5 secondi
+
     void Start()
+    {
+        InvokeRepeating(nameof(RicaricaOrdini), 0f, tempoAggiornamento);
+    }
+
+    void RicaricaOrdini()
     {
         StartCoroutine(CaricaOrdiniInviati());
     }
@@ -20,7 +27,6 @@ public class PizzeriaSceneController : MonoBehaviour
     {
         string url = "http://localhost:3000/ordini/inviati";
         UnityWebRequest req = UnityWebRequest.Get(url);
-
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success)
@@ -28,27 +34,25 @@ public class PizzeriaSceneController : MonoBehaviour
             Debug.LogError("❌ Errore caricamento ordini: " + req.error);
             yield break;
         }
+
         Debug.Log("📥 JSON ricevuto dal DB:\n" + req.downloadHandler.text);
 
         string json = req.downloadHandler.text;
         OrdineInviatoDTO[] ordini = JsonHelper.FromJson<OrdineInviatoDTO>(json);
 
+        // 🔄 Pulisce le card precedenti
+        foreach (Transform c in contenitoreOrdini)
+            Destroy(c.gameObject);
+
         foreach (var ordine in ordini)
         {
             GameObject card = Instantiate(prefabOrdine, contenitoreOrdini);
             var refUI = card.GetComponent<OrdineCardUI>();
-            if (refUI == null)
-            {
-                Debug.LogError("❌ Il prefabOrdine non contiene OrdineCardUI!");
-                continue;
-            }
             if (refUI == null || refUI.tavoloNome == null || refUI.orario == null || refUI.contenitorePizze == null)
             {
                 Debug.LogError("❌ OrdineCardUI non è completo, controlla il prefab.");
                 continue;
             }
-
-
 
             refUI.tavoloNome.text = ordine.tavolo_nome;
             if (System.DateTime.TryParse(ordine.orario_ordine, out var dt))
@@ -70,24 +74,19 @@ public class PizzeriaSceneController : MonoBehaviour
             refUI.pronto.onClick.AddListener(() =>
             {
                 Debug.Log($"✅ Tavolo {ordine.tavolo_id} segnato come 'Aperto'");
-
+                StartCoroutine(CambiaStatoOrdine(ordine.id, "Consegnato"));
                 StartCoroutine(CambiaStatoTavolo(ordine.tavolo_id, "Aperto"));
 
-                // Rimuovi visivamente la card dalla lista
+                // 🗑️ Rimuove visivamente la card
                 Destroy(card);
             });
-
-
         }
     }
+
     private IEnumerator CambiaStatoTavolo(int tavoloId, string nuovoStato)
     {
-        string url = $"http://localhost:3000/tavoli/{tavoloId}/apri"; // usa la tua rotta esistente
-
-        string json = $@"
-    {{
-        ""stato"": ""{nuovoStato}""
-    }}";
+        string url = $"http://localhost:3000/tavoli/{tavoloId}/apri";
+        string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
 
         UnityWebRequest req = UnityWebRequest.Put(url, json);
         req.method = "PUT";
@@ -102,7 +101,23 @@ public class PizzeriaSceneController : MonoBehaviour
             Debug.Log("🔁 Stato tavolo aggiornato con successo");
     }
 
+    private IEnumerator CambiaStatoOrdine(int ordineId, string nuovoStato)
+    {
+        string url = $"http://localhost:3000/ordini/{ordineId}/stato";
+        string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
 
+        UnityWebRequest req = UnityWebRequest.Put(url, json);
+        req.method = "PUT";
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+            Debug.LogError("❌ Errore aggiornamento stato ordine: " + req.error);
+        else
+            Debug.Log("✅ Stato ordine aggiornato a 'Consegnato'");
+    }
 
     [System.Serializable]
     public class OrdineInviatoDTO
@@ -114,6 +129,7 @@ public class PizzeriaSceneController : MonoBehaviour
         public string prodotti;
         public string orario_ordine;
         public string tavolo_nome;
+        public string stato;
     }
 
     private PizzaDTO[] ParsePizzeJson(string pizzeJson)
@@ -127,9 +143,8 @@ public class PizzeriaSceneController : MonoBehaviour
         return wrapper.array ?? new PizzaDTO[0];
     }
 
-
-
     [System.Serializable] public class PizzaWrapper { public PizzaDTO[] array; }
+
     [System.Serializable]
     public class PizzaDTO
     {
