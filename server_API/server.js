@@ -403,7 +403,7 @@ app.get("/ordini/inviati", (req, res) => {
     SELECT o.*, t.nominativo AS tavolo_nome
     FROM Ordini o
     JOIN Tavoli t ON t.id = o.tavolo_id
-    WHERE o.stato != 'Consegnato'
+    WHERE o.stato != 'Consegnato' and o.stato != 'Chiuso'
     ORDER BY o.orario_ordine ASC
   `;
 

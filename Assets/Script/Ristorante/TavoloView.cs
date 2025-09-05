@@ -77,6 +77,7 @@ private void OnTavoloClicked()
     switch (data.stato)
     {
         case StatoTavolo.Aperto:
+
         case StatoTavolo.OrdineInviato:
             if (tavoloOrdiniOpener != null)
             {
@@ -90,6 +91,19 @@ private void OnTavoloClicked()
             }
             break;
 
+        case StatoTavolo.Consegnato:
+            if (tavoloOrdiniOpener != null)
+            {
+                tavoloOrdiniOpener.Bind(data);
+                tavoloOrdiniOpener.apriButton.onClick.Invoke(); // forza il click
+            }
+            else
+            {
+                TavoloCorrenteRegistry.tavoloAttivo = ScriptableObject.Instantiate(data);
+                SceneManager.LoadScene("OrdiniScene");
+            }
+            break;
+            
         case StatoTavolo.Prenotato:
             dettaglioUI.MostraDettaglio(data);
             break;
@@ -144,7 +158,7 @@ private void OnTavoloClicked()
             case StatoTavolo.Aperto:
                 statoTxt.text = $"Aperto\n{data.postiOccupati}/{data.numeroPosti}";
                 if (background != null) background.color = Color.green;
-                if (liberaButton != null) liberaButton.gameObject.SetActive(true);
+                if (liberaButton != null) liberaButton.gameObject.SetActive(false);
                 if (modificaButton != null) modificaButton.gameObject.SetActive(false);
                 break;
             case StatoTavolo.OrdineInviato:
@@ -160,7 +174,15 @@ private void OnTavoloClicked()
                 liberaButton?.gameObject.SetActive(false);
                 modificaButton?.gameObject.SetActive(false);
                 break;
+
+            case StatoTavolo.Consegnato:
+                statoTxt.text = $"Consegnato\n{data.postiOccupati}/{data.numeroPosti}";
+                if (background != null) background.color = Color.darkGreen;
+                if (liberaButton != null) liberaButton.gameObject.SetActive(false);
+                if (modificaButton != null) modificaButton.gameObject.SetActive(false);
+                break;
         }
+            
         
     }
 

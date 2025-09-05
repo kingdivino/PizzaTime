@@ -12,6 +12,7 @@ public class SalaSelector : MonoBehaviour
     public GameObject menuSale;
     public GameObject salaViewPanel;
     public GameObject aggiungi;
+    public Button Indietro;
 
     public Sala salaCorrente { get; private set; }
 
@@ -26,6 +27,7 @@ public class SalaSelector : MonoBehaviour
 
     public void TornaAlMenu()
     {
+        Indietro.gameObject.SetActive(true);
         salaCorrente = null;
         salaViewPanel.SetActive(false);
         menuSale.SetActive(true);
@@ -79,6 +81,7 @@ public class SalaSelector : MonoBehaviour
             salaCorrente = sala;
             salaView.MostraSala(sala);
             menuSale.SetActive(false);
+            Indietro.gameObject.SetActive(false);
             aggiungi.SetActive(false);
             salaViewPanel.SetActive(true);
 

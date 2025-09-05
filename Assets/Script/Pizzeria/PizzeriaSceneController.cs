@@ -10,11 +10,16 @@ public class PizzeriaSceneController : MonoBehaviour
     public Transform contenitoreOrdini;
     public GameObject prefabOrdine;
     public GameObject prefabRigaPizza;
+    public Button indietro;
 
     private float tempoAggiornamento = 5f; // ⏱ ogni 5 secondi
 
     void Start()
     {
+        indietro.onClick.AddListener(() =>
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+        });
         InvokeRepeating(nameof(RicaricaOrdini), 0f, tempoAggiornamento);
     }
 
@@ -75,7 +80,7 @@ public class PizzeriaSceneController : MonoBehaviour
             {
                 Debug.Log($"✅ Tavolo {ordine.tavolo_id} segnato come 'Aperto'");
                 StartCoroutine(CambiaStatoOrdine(ordine.id, "Consegnato"));
-                StartCoroutine(CambiaStatoTavolo(ordine.tavolo_id, "Aperto"));
+                StartCoroutine(CambiaStatoTavolo(ordine.tavolo_id, "Consegnato"));
 
                 // 🗑️ Rimuove visivamente la card
                 Destroy(card);

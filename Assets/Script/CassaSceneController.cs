@@ -79,49 +79,72 @@ public class CassaSceneController : MonoBehaviour
             txtTotale.text = $"Totale: {totaleOrdine:F2}€";
     }
 
-    private IEnumerator CompletaPagamento(int tavoloId)
+private IEnumerator CompletaPagamento(int tavoloId)
+{
+    // 1. Libera tavolo
+    string urlLibera = $"http://localhost:3000/tavoli/{tavoloId}/libera";
+    UnityWebRequest req1 = UnityWebRequest.Put(urlLibera, "");
+    req1.method = "PUT";
+    req1.SetRequestHeader("Content-Type", "application/json");
+    req1.downloadHandler = new DownloadHandlerBuffer();
+
+    yield return req1.SendWebRequest();
+
+    if (req1.result != UnityWebRequest.Result.Success)
     {
-        // 1. Libera tavolo
-        string urlLibera = $"http://localhost:3000/tavoli/{tavoloId}/libera";
-        UnityWebRequest req1 = UnityWebRequest.Put(urlLibera, "");
-        req1.method = "PUT";
-        req1.SetRequestHeader("Content-Type", "application/json");
-        req1.downloadHandler = new DownloadHandlerBuffer();
-
-        yield return req1.SendWebRequest();
-
-        if (req1.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("❌ Errore liberazione tavolo: " + req1.error);
-            yield break;
-        }
-
-        Debug.Log("✅ Tavolo liberato");
-
-        // 2. Cancella tutti gli ordini
-        string urlOrdini = $"http://localhost:3000/ordini/chiudi?tavoloId={tavoloId}";
-        UnityWebRequest req2 = UnityWebRequest.Delete(urlOrdini);
-
-        yield return req2.SendWebRequest();
-
-        if (req2.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("❌ Errore cancellazione ordini: " + req2.error);
-            yield break;
-        }
-
-        Debug.Log("✅ Ordini chiusi/cancellati");
-
-        Tavolo tavolo = TavoloCorrenteRegistry.tavoloAttivo;
-        if (tavolo != null)
-        {
-            SalaCorrenteRegistry.salaIdAttiva = tavolo.salaId;
-            Debug.Log($"✅ Impostato SalaCorrenteRegistry.salaIdAttiva a {tavolo.salaId}");
-        }
-
-        // 3. Torna alla scena sala
-        SceneManager.LoadScene("Ristorante");
+        Debug.LogError("❌ Errore liberazione tavolo: " + req1.error);
+        yield break;
     }
+
+    Debug.Log("✅ Tavolo liberato");
+
+    // 2. Recupera gli ordini attivi del tavolo
+    string urlGet = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+    UnityWebRequest reqGet = UnityWebRequest.Get(urlGet);
+    yield return reqGet.SendWebRequest();
+
+    if (reqGet.result != UnityWebRequest.Result.Success)
+    {
+        Debug.LogError("❌ Errore nel recupero ordini: " + reqGet.error);
+        yield break;
+    }
+
+    OrdineDTO[] ordini = JsonHelper.FromJson<OrdineDTO>(reqGet.downloadHandler.text);
+
+    // 3. Aggiorna stato di ogni ordine a "Chiuso"
+    foreach (var ordine in ordini)
+    {
+        string urlStato = $"http://localhost:3000/ordini/{ordine.id}/stato";
+        string json = $@"{{ ""stato"": ""Chiuso"" }}";
+
+        UnityWebRequest reqStato = UnityWebRequest.Put(urlStato, json);
+        reqStato.method = "PUT";
+        reqStato.SetRequestHeader("Content-Type", "application/json");
+        reqStato.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return reqStato.SendWebRequest();
+
+        if (reqStato.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError($"❌ Errore aggiornamento ordine {ordine.id}: " + reqStato.error);
+        }
+        else
+        {
+            Debug.Log($"✅ Ordine {ordine.id} aggiornato a 'Chiuso'");
+        }
+    }
+
+    // 4. Salva ID sala per tornare correttamente
+    if (tavolo != null)
+    {
+        SalaCorrenteRegistry.salaIdAttiva = tavolo.salaId;
+        Debug.Log($"✅ Impostato SalaCorrenteRegistry.salaIdAttiva a {tavolo.salaId}");
+    }
+
+    // 5. Torna alla sala
+    SceneManager.LoadScene("Ristorante");
+}
+
 
     private PizzaDTO[] ParsePizzeJson(string pizzeJson)
     {

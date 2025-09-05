@@ -48,4 +48,5 @@ public enum StatoTavolo
     Aperto,
     OrdineInviato,
     RichiestaConto,
+    Consegnato
 }

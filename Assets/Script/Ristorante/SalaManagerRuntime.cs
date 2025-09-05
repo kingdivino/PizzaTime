@@ -19,9 +19,10 @@ public class SalaManagerRuntime : MonoBehaviour
     public Button btnConferma;
     public Button btnAnnulla;
     public Button btnApriPanelAggiungi; // il bottone “Aggiungi Sala” principale
-
+    public Button indietro;
 
     private string apiUrl = "http://localhost:3000/sale"; // API per creare sala
+
 
     public void CreaNuovaSala()
     {
@@ -99,10 +100,17 @@ public class SalaManagerRuntime : MonoBehaviour
 
 void Start()
 {
+    indietro.gameObject.SetActive(true); // ✅ mostralo quando entri
+
+    indietro.onClick.AddListener(() =>
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    });
     panelAggiuntaSala.SetActive(false);
     btnApriPanelAggiungi.onClick.AddListener(() =>
     {
         menuSalePanel.SetActive(false);
+        indietro.gameObject.SetActive(false);
         panelAggiuntaSala.SetActive(true);
         inputNomeSala.text = "";
     });

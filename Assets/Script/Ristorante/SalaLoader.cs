@@ -20,10 +20,15 @@ public class SalaLoader : MonoBehaviour
     [Header("Riferimenti")]
     public SalaSelector salaSelector;     // gestore UI sale
 
+    public Button indietro;
     private string apiUrl = "http://localhost:3000/sale";
 
 void Start()
 {
+    indietro.onClick.AddListener(() =>
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    });
     StartCoroutine(CaricaSale());
 
     if (SalaCorrenteRegistry.salaIdAttiva != 0)
