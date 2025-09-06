@@ -1,9 +1,19 @@
 
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+
+[System.Serializable]
+public class ConsumoIngredienteDTO
+{
+    public int id;
+    public int quantita;
+}
+
 
 public class Riepilogo : MonoBehaviour
 {
@@ -19,6 +29,8 @@ public class Riepilogo : MonoBehaviour
 
     private List<GameObject> listaComponenti = new List<GameObject>();
     private Pizza newPizza = null;
+
+    private string apiUrlConsumo = "http://localhost:3000/ingredienti";
 
     public void UpdateRiepilogo()
     {
@@ -72,14 +84,52 @@ public class Riepilogo : MonoBehaviour
     {
         if (newPizza.impasto == null)
         {
-            Debug.Log("Seleziona Almeno un Impasto per ordinare");
+            Debug.Log("Seleziona almeno un impasto per ordinare");
             return;
         }
-        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
-        
-        TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
-        Debug.Log(TavoloCorrenteRegistry.tavoloAttivo.nominativo + " contiene " + TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Count + " Pizze");
 
+        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
+
+        TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
+
+        // 📌 Consuma ogni ingrediente secondo lo stile OrderSceneController
+        foreach (var ingrediente in newPizza.ingredienti)
+        {
+            DatabaseManager.Instance.ConsumaIngrediente(ingrediente);
+        }
+
+        // Vai alla scena ordini
         SceneManager.LoadScene("OrdiniScene");
     }
+
+
+    private IEnumerator ConsumaIngrediente(Ingrediente ingrediente, int quantita)
+    {
+        ConsumoIngredienteDTO dto = new ConsumoIngredienteDTO
+        {
+            id = ingrediente.id,
+            quantita = quantita
+        };
+
+        string jsonData = JsonUtility.ToJson(dto);
+
+        using (UnityWebRequest www = UnityWebRequest.Put(apiUrlConsumo, jsonData))
+        {
+            www.method = "POST"; // 🔹 forza POST
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"❌ Errore consumo ingrediente {ingrediente.nome}: {www.error}");
+            }
+            else
+            {
+                Debug.Log($"✅ Consumata 1 unità di {ingrediente.nome} (ID={ingrediente.id})");
+            }
+        }
+    }
+
+
 }
