@@ -453,6 +453,49 @@ app.delete("/ordini/chiudi", (req, res) => {
   });
 });
 
+// POST /ingredienti → consuma 1 unità di un ingrediente
+app.post("/ingredienti", (req, res) => {
+  const { id, quantita } = req.body;
+
+  if (!id || !quantita) {
+    return res.status(400).json({ error: "Dati incompleti" });
+  }
+
+  // prima recupera la giacenza corrente
+  const selectQuery = "SELECT giacenza, nome FROM ingredienti WHERE id = ?";
+  db.query(selectQuery, [id], (err, results) => {
+    if (err) {
+      console.error("❌ Errore DB:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Ingrediente non trovato" });
+    }
+
+    const giacenzaAttuale = results[0].giacenza;
+    const nomeIngrediente = results[0].nome;
+
+    if (giacenzaAttuale < quantita) {
+      // ❌ non ci sono abbastanza ingredienti
+      return res.status(400).json({ error: `Giacenza insufficiente per ${nomeIngrediente}` });
+    }
+
+    // ✅ aggiorna giacenza
+    const updateQuery = "UPDATE ingredienti SET giacenza = giacenza - ? WHERE id = ?";
+    db.query(updateQuery, [quantita, id], (err2, result) => {
+      if (err2) {
+        console.error("❌ Errore DB:", err2);
+        return res.status(500).json({ error: "Errore DB" });
+      }
+
+      res.json({ success: true, message: `${quantita} unità di ${nomeIngrediente} consumata` });
+    });
+  });
+});
+
+
+
 
 // avvio server
 app.listen(3000, () => {

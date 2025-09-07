@@ -30,6 +30,9 @@ public class Riepilogo : MonoBehaviour
     private List<GameObject> listaComponenti = new List<GameObject>();
     private Pizza newPizza = null;
 
+    public GameObject pannelloErrore;
+    public TextMeshProUGUI testoErrore; 
+
     private string apiUrlConsumo = "http://localhost:3000/ingredienti";
 
     public void UpdateRiepilogo()
@@ -88,47 +91,21 @@ public class Riepilogo : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Pizza creata da {newPizza.proprietario}: {newPizza.impasto.nome}, prezzo = {newPizza.GetPrezzo()}€");
-
-        TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
-
-        // 📌 Consuma ogni ingrediente secondo lo stile OrderSceneController
-        foreach (var ingrediente in newPizza.ingredienti)
-        {
-            DatabaseManager.Instance.ConsumaIngrediente(ingrediente);
-        }
-
-        // Vai alla scena ordini
-        SceneManager.LoadScene("OrdiniScene");
-    }
-
-
-    private IEnumerator ConsumaIngrediente(Ingrediente ingrediente, int quantita)
-    {
-        ConsumoIngredienteDTO dto = new ConsumoIngredienteDTO
-        {
-            id = ingrediente.id,
-            quantita = quantita
-        };
-
-        string jsonData = JsonUtility.ToJson(dto);
-
-        using (UnityWebRequest www = UnityWebRequest.Put(apiUrlConsumo, jsonData))
-        {
-            www.method = "POST"; // 🔹 forza POST
-            www.SetRequestHeader("Content-Type", "application/json");
-
-            yield return www.SendWebRequest();
-
-            if (www.result != UnityWebRequest.Result.Success)
+        DatabaseManager.Instance.ConsumaIngredientiEOrdina(
+            newPizza,
+            () =>
             {
-                Debug.LogError($"❌ Errore consumo ingrediente {ingrediente.nome}: {www.error}");
-            }
-            else
+                // ✅ Ordine ok, aggiungi pizza al tavolo e cambia scena
+                TavoloCorrenteRegistry.tavoloAttivo.ListaPizzeOrdinate.Add(newPizza);
+                SceneManager.LoadScene("OrdiniScene");
+            },
+            (ingredientiMancanti) =>
             {
-                Debug.Log($"✅ Consumata 1 unità di {ingrediente.nome} (ID={ingrediente.id})");
+                // ❌ Mostra pannello errore
+                pannelloErrore.SetActive(true);
+                testoErrore.text = "Ingredienti mancanti:\n" + string.Join("\n", ingredientiMancanti);
             }
-        }
+        );
     }
 
 
