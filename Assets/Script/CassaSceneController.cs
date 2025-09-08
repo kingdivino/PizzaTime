@@ -82,6 +82,20 @@ public class CassaSceneController : MonoBehaviour
 
                 totaleOrdine += pizza.prezzo;
             }
+            // 🔽 Leggi e visualizza i prodotti (se presenti)
+            ProdottoDTO[] prodotti = ParseProdottiJson(ordine.prodotti);
+
+            foreach (var prod in prodotti)
+            {
+                GameObject riga = Instantiate(prefabRigaPizza, contenitorePizze);
+                var comp = riga.GetComponent<ComponentiReference>();
+                comp.nome.text = $"{prod.nome} x{prod.quantita}";
+                comp.prezzo.text = $"{(prod.prezzo * prod.quantita):F2}€";
+                comp.ingredienti.text = "Prodotto aggiuntivo";
+
+                totaleOrdine += prod.prezzo * prod.quantita;
+            }
+
         }
 
         if (txtTotale)
@@ -198,6 +212,21 @@ public class CassaSceneController : MonoBehaviour
         PizzaWrapper wrapper = JsonUtility.FromJson<PizzaWrapper>(wrapped);
         return wrapper.array ?? new PizzaDTO[0];
     }
+    private ProdottoDTO[] ParseProdottiJson(string prodottiJson)
+{
+    if (string.IsNullOrEmpty(prodottiJson)) return new ProdottoDTO[0];
+    string cleaned = prodottiJson.Replace("\\\"", "\"").Trim();
+    string wrapped = "{\"array\":" + cleaned + "}";
+    ProdottoWrapper wrapper = JsonUtility.FromJson<ProdottoWrapper>(wrapped);
+    return wrapper.array ?? new ProdottoDTO[0];
+}
+
+[System.Serializable]
+public class ProdottoWrapper
+{
+    public ProdottoDTO[] array;
+}
+
 
     [System.Serializable] public class PizzaWrapper { public PizzaDTO[] array; }
 
@@ -241,5 +270,13 @@ public class ReportGiornalieroDTO
     public int num_pizze;
     public float totale;
 }
-
+[System.Serializable]
+public class ProdottoDTO
+{
+    public int id;
+    public string nome;
+    public float prezzo;
+    public int quantita;
 }
+}
+

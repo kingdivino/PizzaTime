@@ -74,6 +74,17 @@ public class PizzeriaSceneController : MonoBehaviour
                 comp.prezzo.text = $"{pizza.prezzo:F2}€";
                 comp.ingredienti.text = $"Impasto: {pizza.impasto_nome}\nIngredienti: {string.Join(", ", pizza.ingredienti)}";
             }
+            // 🔽 Leggi e visualizza i prodotti (se presenti)
+            ProdottoDTO[] prodotti = ParseProdottiJson(ordine.prodotti);
+
+            foreach (var prod in prodotti)
+            {
+                GameObject riga = Instantiate(prefabRigaPizza, refUI.contenitorePizze);
+                var comp = riga.GetComponent<ComponentiReference>();
+                comp.nome.text = $"{prod.nome} x{prod.quantita}";
+                comp.prezzo.text = $"{(prod.prezzo * prod.quantita):F2}€";
+                comp.ingredienti.text = "Prodotto aggiuntivo";
+            }
 
             refUI.pronto.onClick.RemoveAllListeners();
             refUI.pronto.onClick.AddListener(() =>
@@ -158,4 +169,29 @@ public class PizzeriaSceneController : MonoBehaviour
         public string impasto_nome;
         public string[] ingredienti;
     }
+    [System.Serializable]
+public class ProdottoDTO
+{
+    public int id;
+    public string nome;
+    public float prezzo;
+    public int quantita;
+}
+
+[System.Serializable]
+public class ProdottoWrapper
+{
+    public ProdottoDTO[] array;
+}
+private ProdottoDTO[] ParseProdottiJson(string prodottiJson)
+{
+    if (string.IsNullOrEmpty(prodottiJson)) return new ProdottoDTO[0];
+
+    string cleaned = prodottiJson.Replace("\\\"", "\"").Trim();
+    string wrapped = "{\"array\":" + cleaned + "}";
+
+    ProdottoWrapper wrapper = JsonUtility.FromJson<ProdottoWrapper>(wrapped);
+    return wrapper.array ?? new ProdottoDTO[0];
+}
+
 }
