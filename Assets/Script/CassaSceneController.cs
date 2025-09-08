@@ -16,7 +16,8 @@ public class CassaSceneController : MonoBehaviour
 
     private Tavolo tavolo;
     private float totaleOrdine = 0f;
-
+    private int totalePizzeVendute = 0;
+    float totaleGiornaliero = 0f;
     void Start()
     {
         tavolo = TavoloCorrenteRegistry.tavoloAttivo;
@@ -54,12 +55,20 @@ public class CassaSceneController : MonoBehaviour
         string json = req.downloadHandler.text;
         OrdineDTO[] ordini = JsonHelper.FromJson<OrdineDTO>(json);
 
+        // 🔸 FILTRO: mantieni solo ordini in stato RichiestaConto
+        List<OrdineDTO> ordiniFiltrati = new List<OrdineDTO>();
+        foreach (var ordine in ordini)
+        {
+            if (ordine.stato == "RichiestaConto")
+                ordiniFiltrati.Add(ordine);
+        }
+
         foreach (Transform child in contenitorePizze)
             Destroy(child.gameObject);
 
         totaleOrdine = 0f;
 
-        foreach (var ordine in ordini)
+        foreach (var ordine in ordiniFiltrati)
         {
             PizzaDTO[] pizze = ParsePizzeJson(ordine.pizze);
 
@@ -79,72 +88,107 @@ public class CassaSceneController : MonoBehaviour
             txtTotale.text = $"Totale: {totaleOrdine:F2}€";
     }
 
-private IEnumerator CompletaPagamento(int tavoloId)
-{
-    // 1. Libera tavolo
-    string urlLibera = $"http://localhost:3000/tavoli/{tavoloId}/libera";
-    UnityWebRequest req1 = UnityWebRequest.Put(urlLibera, "");
-    req1.method = "PUT";
-    req1.SetRequestHeader("Content-Type", "application/json");
-    req1.downloadHandler = new DownloadHandlerBuffer();
 
-    yield return req1.SendWebRequest();
-
-    if (req1.result != UnityWebRequest.Result.Success)
+    private IEnumerator CompletaPagamento(int tavoloId)
     {
-        Debug.LogError("❌ Errore liberazione tavolo: " + req1.error);
-        yield break;
-    }
+        // 1. Libera tavolo
+        string urlLibera = $"http://localhost:3000/tavoli/{tavoloId}/libera";
+        UnityWebRequest req1 = UnityWebRequest.Put(urlLibera, "");
+        req1.method = "PUT";
+        req1.SetRequestHeader("Content-Type", "application/json");
+        req1.downloadHandler = new DownloadHandlerBuffer();
 
-    Debug.Log("✅ Tavolo liberato");
+        yield return req1.SendWebRequest();
 
-    // 2. Recupera gli ordini attivi del tavolo
-    string urlGet = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
-    UnityWebRequest reqGet = UnityWebRequest.Get(urlGet);
-    yield return reqGet.SendWebRequest();
-
-    if (reqGet.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("❌ Errore nel recupero ordini: " + reqGet.error);
-        yield break;
-    }
-
-    OrdineDTO[] ordini = JsonHelper.FromJson<OrdineDTO>(reqGet.downloadHandler.text);
-
-    // 3. Aggiorna stato di ogni ordine a "Chiuso"
-    foreach (var ordine in ordini)
-    {
-        string urlStato = $"http://localhost:3000/ordini/{ordine.id}/stato";
-        string json = $@"{{ ""stato"": ""Chiuso"" }}";
-
-        UnityWebRequest reqStato = UnityWebRequest.Put(urlStato, json);
-        reqStato.method = "PUT";
-        reqStato.SetRequestHeader("Content-Type", "application/json");
-        reqStato.downloadHandler = new DownloadHandlerBuffer();
-
-        yield return reqStato.SendWebRequest();
-
-        if (reqStato.result != UnityWebRequest.Result.Success)
+        if (req1.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"❌ Errore aggiornamento ordine {ordine.id}: " + reqStato.error);
+            Debug.LogError("❌ Errore liberazione tavolo: " + req1.error);
+            yield break;
         }
+
+        Debug.Log("✅ Tavolo liberato");
+
+        // 2. Recupera gli ordini attivi del tavolo
+        string urlGet = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+        UnityWebRequest reqGet = UnityWebRequest.Get(urlGet);
+        yield return reqGet.SendWebRequest();
+
+        if (reqGet.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore nel recupero ordini: " + reqGet.error);
+            yield break;
+        }
+
+        OrdineDTO[] ordini = JsonHelper.FromJson<OrdineDTO>(reqGet.downloadHandler.text);
+
+        // 3. Aggiorna stato di ogni ordine a "Chiuso"
+        foreach (var ordine in ordini)
+        {
+            if (ordine.stato == "Chiuso")
+                continue; 
+            string urlStato = $"http://localhost:3000/ordini/{ordine.id}/stato";
+            string json = $@"{{ ""stato"": ""Chiuso"" }}";
+
+            UnityWebRequest reqStato = UnityWebRequest.Put(urlStato, json);
+            reqStato.method = "PUT";
+            reqStato.SetRequestHeader("Content-Type", "application/json");
+            reqStato.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return reqStato.SendWebRequest();
+
+
+            PizzaDTO[] pizze = ParsePizzeJson(ordine.pizze);
+            totalePizzeVendute += pizze.Length;
+            totaleGiornaliero += ordine.prezzo_totale;
+            if (reqStato.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"❌ Errore aggiornamento ordine {ordine.id}: " + reqStato.error);
+            }
+            else
+            {
+                Debug.Log($"✅ Ordine {ordine.id} aggiornato a 'Chiuso'");
+            }
+        }
+
+        Debug.Log($"🍕 Totale pizze vendute: {totalePizzeVendute}, Totale incasso: {totaleGiornaliero:F2}€");
+        StartCoroutine(InviaReportGiornaliero(totalePizzeVendute, totaleGiornaliero));
+
+
+        // 4. Salva ID sala per tornare correttamente
+        if (tavolo != null)
+        {
+            SalaCorrenteRegistry.salaIdAttiva = tavolo.salaId;
+            Debug.Log($"✅ Impostato SalaCorrenteRegistry.salaIdAttiva a {tavolo.salaId}");
+        }
+
+        // 5. Torna alla sala
+        SceneManager.LoadScene("Ristorante");
+    }
+
+    private IEnumerator InviaReportGiornaliero(int numPizze, float totale)
+    {
+        string url = "http://localhost:3000/report/giornaliero/pizze";
+
+        var payload = new ReportGiornalieroDTO
+        {
+            num_pizze = numPizze,
+            totale = totale
+        };
+
+        string json = JsonUtility.ToJson(payload);
+        UnityWebRequest req = new UnityWebRequest(url, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        req.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Content-Type", "application/json");
+
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+            Debug.LogError("❌ Errore invio report: " + req.error);
         else
-        {
-            Debug.Log($"✅ Ordine {ordine.id} aggiornato a 'Chiuso'");
-        }
+            Debug.Log("✅ Report giornaliero aggiornato con successo");
     }
-
-    // 4. Salva ID sala per tornare correttamente
-    if (tavolo != null)
-    {
-        SalaCorrenteRegistry.salaIdAttiva = tavolo.salaId;
-        Debug.Log($"✅ Impostato SalaCorrenteRegistry.salaIdAttiva a {tavolo.salaId}");
-    }
-
-    // 5. Torna alla sala
-    SceneManager.LoadScene("Ristorante");
-}
-
 
     private PizzaDTO[] ParsePizzeJson(string pizzeJson)
     {
@@ -191,4 +235,11 @@ private IEnumerator CompletaPagamento(int tavoloId)
             public T[] array;
         }
     }
+    [System.Serializable]
+public class ReportGiornalieroDTO
+{
+    public int num_pizze;
+    public float totale;
+}
+
 }
