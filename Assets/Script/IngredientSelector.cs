@@ -44,7 +44,7 @@ public class IngredientSelector : MonoBehaviour
             if (toggleView != null)
             {
                 toggleView.nome.text = ingr.nome;
-                toggleView.prezzo.text = $"{ingr.prezzo:F2}€";
+                toggleView.prezzo.text = $"{ingr.prezzo:F2}ï¿½";
             }
 
             ingredientToggles.Add(newToggle);
@@ -68,7 +68,7 @@ public class IngredientSelector : MonoBehaviour
                         return;
                     }
 
-                    // aggiungo solo se non è già presente
+                    // aggiungo solo se non ï¿½ giï¿½ presente
                     //if (selectedIngredients.Add(ingr.nome))
                     //{
                     //    ingredientCount++;
@@ -119,7 +119,7 @@ public class IngredientSelector : MonoBehaviour
 
     private void UpdateTotaleText()
     {
-        if (totaleText != null) totaleText.text = $"{totale:F2}€";
+        if (totaleText != null) totaleText.text = $"{totale:F2}ï¿½";
     }
 
     public List<Ingrediente> GetSelectedIngredients()

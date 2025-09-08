@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Networking;
+using System.Collections;
 
 public class RigaIngredienteUI : MonoBehaviour
 {
@@ -12,9 +14,10 @@ public class RigaIngredienteUI : MonoBehaviour
     public Button btnMenoUno;
     public Button btnPiuN;
 
-    private Ingrediente data; // usa la tua classe ScriptableObject
+    private IngredienteDTO data;
+    
 
-    public void Bind(Ingrediente ingrediente)
+    public void Bind(IngredienteDTO ingrediente)
     {
         data = ingrediente;
 
@@ -25,25 +28,40 @@ public class RigaIngredienteUI : MonoBehaviour
         btnMenoUno.onClick.RemoveAllListeners();
         btnPiuN.onClick.RemoveAllListeners();
 
-        btnPiuUno.onClick.AddListener(() => Modifica(1));
-        btnMenoUno.onClick.AddListener(() => Modifica(-1));
+        btnPiuUno.onClick.AddListener(() => StartCoroutine(ModificaQuantita(1)));
+        btnMenoUno.onClick.AddListener(() => StartCoroutine(ModificaQuantita(-1)));
         btnPiuN.onClick.AddListener(() =>
         {
             if (int.TryParse(inputN.text, out var n))
-                Modifica(n);
+                StartCoroutine(ModificaQuantita(n));
         });
     }
 
-    private void Modifica(int delta)
+    private IEnumerator ModificaQuantita(int delta)
     {
-        data.quantita = Mathf.Max(0, data.quantita + delta);
-        AggiornaUI();
+        int nuovaQuantita = Mathf.Max(0, data.quantita + delta);
 
-        // salvataggio nel file asset (solo in Editor)
-#if UNITY_EDITOR
-        UnityEditor.EditorUtility.SetDirty(data);
-        UnityEditor.AssetDatabase.SaveAssets();
-#endif
+        // 🔁 Richiesta PUT al backend
+        string url = $"http://localhost:3000/ingredienti/{data.id}";
+
+        string json = $@"{{ ""quantita"": {nuovaQuantita} }}";
+
+        UnityWebRequest req = UnityWebRequest.Put(url, json);
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.downloadHandler = new DownloadHandlerBuffer();
+
+        yield return req.SendWebRequest();
+
+        if (req.result == UnityWebRequest.Result.Success)
+        {
+            data.quantita = nuovaQuantita;
+            AggiornaUI();
+            Debug.Log($"✅ Ingrediente {data.nome} aggiornato a {data.quantita}");
+        }
+        else
+        {
+            Debug.LogError("❌ Errore aggiornamento quantità ingrediente: " + req.error);
+        }
     }
 
     private void AggiornaUI()
@@ -51,3 +69,15 @@ public class RigaIngredienteUI : MonoBehaviour
         quantitaTxt.text = data.quantita.ToString();
     }
 }
+
+[System.Serializable]
+public class IngredienteDTO
+{
+    public int id;
+    public string nome;
+    public float prezzo;
+    public int quantita;
+    public string sprite; // 🆕 Nome sprite
+}
+
+

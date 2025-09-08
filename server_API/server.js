@@ -494,6 +494,45 @@ app.post("/ingredienti", (req, res) => {
   });
 });
 
+// Lista ingredienti
+app.get('/ingredienti', (req, res) => {
+  const q = 'SELECT id, nome, giacenza AS quantita FROM ingredienti ORDER BY nome';
+  db.query(q, (err, rows) => {
+    if (err) {
+      console.error("❌ Errore select:", err);
+      return res.status(500).json({ error: 'Errore DB' });
+    }
+    res.json(rows); // ← array JSON
+  });
+});
+
+// Dettaglio singolo ingrediente (opzionale)
+app.get('/ingredienti/:id', (req, res) => {
+  const q = 'SELECT id, nome, giacenza AS quantita FROM ingredienti WHERE id = ?';
+  db.query(q, [req.params.id], (err, rows) => {
+    if (err) {
+      console.error("❌ Errore select:", err);
+      return res.status(500).json({ error: 'Errore DB' });
+    }
+    if (!rows.length) return res.status(404).json({ error: 'Non trovato' });
+    res.json(rows[0]);
+  });
+});
+
+// Già esistente: aggiorna giacenza
+app.put('/ingredienti/:id', (req, res) => {
+  const id = req.params.id;
+  const quantita = req.body.quantita;           // Unity manda "quantita"
+  const query = 'UPDATE ingredienti SET giacenza = ? WHERE id = ?';
+  db.query(query, [quantita, id], (err) => {
+    if (err) {
+      console.error("❌ Errore update:", err);
+      return res.status(500).json({ error: 'Errore DB' });
+    }
+    res.json({ success: true });
+  });
+});
+
 
 
 

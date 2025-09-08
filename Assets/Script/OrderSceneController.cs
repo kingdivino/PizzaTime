@@ -178,24 +178,26 @@ private IEnumerator CaricaOrdineEsistente(int tavoloId)
     // ✅ Usa JsonHelper per leggere array
     OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(json);
 
-    foreach (var ordine in ordini)
-    {
-        PizzaDTO[] pizze = ParsePizzeJson(ordine.pizze);
-
-        foreach (var pizza in pizze)
+        foreach (var ordine in ordini)
         {
-            GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
-            ComponentiReference comp = riga.GetComponent<ComponentiReference>();
+            if (ordine.stato == "Chiuso") continue; // ⛔ Salta ordini chiusi
 
-            comp.nome.text = $"Pizza di {pizza.nome}";
-            comp.prezzo.text = $"{pizza.prezzo:F2}€";
-            comp.ingredienti.text = $"Impasto: {pizza.impasto_nome}\nIngredienti: {string.Join(", ", pizza.ingredienti ?? new string[0])}";
+            PizzaDTO[] pizze = ParsePizzeJson(ordine.pizze);
+
+            foreach (var pizza in pizze)
+            {
+                GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
+                ComponentiReference comp = riga.GetComponent<ComponentiReference>();
+
+                comp.nome.text = $"Pizza di {pizza.nome}";
+                comp.prezzo.text = $"{pizza.prezzo:F2}€";
+                comp.ingredienti.text = $"Impasto: {pizza.impasto_nome}\nIngredienti: {string.Join(", ", pizza.ingredienti ?? new string[0])}";
+            }
+
+            prezzoEsistente += ordine.prezzo_totale;
         }
 
-        prezzoEsistente += ordine.prezzo_totale;
-    }
-
-    AggiornaPrezzoTotale();
+        AggiornaPrezzoTotale();
 }
 
    private IEnumerator AggiornaStatoTavolo(int tavoloId, string nuovoStato)

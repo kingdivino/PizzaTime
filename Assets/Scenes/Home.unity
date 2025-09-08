@@ -267,6 +267,7 @@ GameObject:
   - component: {fileID: 254874379}
   - component: {fileID: 254874378}
   - component: {fileID: 254874377}
+  - component: {fileID: 254874380}
   m_Layer: 5
   m_Name: Sale
   m_TagString: Untagged
@@ -337,7 +338,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 254874378}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 254874380}
+        m_TargetAssemblyTypeName: OpenButton, Assembly-CSharp
+        m_MethodName: OpenScena
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &254874378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -376,6 +389,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 254874375}
   m_CullTransparentMesh: 1
+--- !u!114 &254874380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 254874375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17bc482958f29fc47980cb28ccb9764e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scena: Ristorante
 --- !u!1 &514292842
 GameObject:
   m_ObjectHideFlags: 0
@@ -388,6 +414,7 @@ GameObject:
   - component: {fileID: 514292846}
   - component: {fileID: 514292845}
   - component: {fileID: 514292844}
+  - component: {fileID: 514292847}
   m_Layer: 5
   m_Name: Staff
   m_TagString: Untagged
@@ -458,7 +485,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 514292845}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 514292847}
+        m_TargetAssemblyTypeName: OpenButton, Assembly-CSharp
+        m_MethodName: OpenScena
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &514292845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -497,6 +536,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 514292842}
   m_CullTransparentMesh: 1
+--- !u!114 &514292847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 514292842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17bc482958f29fc47980cb28ccb9764e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scena: StaffScene
 --- !u!1 &563091296
 GameObject:
   m_ObjectHideFlags: 0
@@ -725,6 +777,7 @@ GameObject:
   - component: {fileID: 800561317}
   - component: {fileID: 800561316}
   - component: {fileID: 800561315}
+  - component: {fileID: 800561318}
   m_Layer: 5
   m_Name: Pizzeria
   m_TagString: Untagged
@@ -795,7 +848,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 800561316}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 800561318}
+        m_TargetAssemblyTypeName: OpenButton, Assembly-CSharp
+        m_MethodName: OpenScena
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &800561316
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -834,6 +899,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 800561313}
   m_CullTransparentMesh: 1
+--- !u!114 &800561318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 800561313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17bc482958f29fc47980cb28ccb9764e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scena: Pizzeria
 --- !u!1 &854712675
 GameObject:
   m_ObjectHideFlags: 0
@@ -936,52 +1014,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!1 &1804495758
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1804495759}
-  - component: {fileID: 1804495760}
-  m_Layer: 0
-  m_Name: HomeController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1804495759
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1804495758}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1131.4502, y: 472.82172, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1804495760
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1804495758}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40a87715818b25d44bd8cf6a37190bc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  RistoranteButton: {fileID: 254874377}
-  PizzeriaButton: {fileID: 800561315}
 --- !u!1 &1956336267
 GameObject:
   m_ObjectHideFlags: 0
@@ -1341,4 +1373,3 @@ SceneRoots:
   m_Roots:
   - {fileID: 2011703027}
   - {fileID: 2053827549}
-  - {fileID: 1804495759}
