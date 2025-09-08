@@ -282,69 +282,67 @@ app.post("/pizze", (req, res) => {
   });
 });
 // POST /ordini → salva un nuovo ordine
-app.post("/ordini", (req, res) => {
+// POST /ordini → crea o aggiorna un ordine per un tavolo
+app.post("/ordini", async (req, res) => {
   const { tavolo_id, prezzo_totale, pizze, prodotti } = req.body;
 
-  const selectQuery = "SELECT * FROM Ordini WHERE tavolo_id = ?  AND stato ='inAttesa' LIMIT 1";
-  db.query(selectQuery, [tavolo_id], (err, results) => {
-    if (err) {
-      console.error("❌ Errore SELECT:", err);
-      return res.status(500).json({ error: "Errore DB" });
+  try {
+    // 1️⃣ Controllo e decremento giacenza prodotti
+    for (const p of prodotti) {
+      const [rows] = await db.promise().query(
+        "SELECT giacenza FROM prodotti WHERE id = ?",
+        [p.id]
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: `Prodotto id=${p.id} non trovato` });
+      }
+
+      if (rows[0].giacenza < p.quantita) {
+        return res.status(400).json({ error: `Giacenza insufficiente per prodotto id=${p.id}` });
+      }
+
+      await db.promise().query(
+        "UPDATE prodotti SET giacenza = giacenza - ? WHERE id = ?",
+        [p.quantita, p.id]
+      );
     }
 
-    if (results.length > 0) {
-      const ordine = results[0];
+    // 2️⃣ Controllo se esiste già un ordine "in attesa" per questo tavolo
+    const [existingOrders] = await db.promise().query(
+      "SELECT * FROM Ordini WHERE tavolo_id = ? AND stato = 'inAttesa' LIMIT 1",
+      [tavolo_id]
+    );
 
-      let pizzeEsistenti = [];
-      try { pizzeEsistenti = JSON.parse(ordine.pizze || "[]"); } catch {}
-      let prodottiEsistenti = [];
-      try { prodottiEsistenti = JSON.parse(ordine.prodotti || "[]"); } catch {}
+    if (existingOrders.length > 0) {
+      // Ordine esistente → update
+      const ordine = existingOrders[0];
+      const pizzeFinali = [...JSON.parse(ordine.pizze || "[]"), ...pizze];
+      const prodottiFinali = [...JSON.parse(ordine.prodotti || "[]"), ...prodotti];
+      const prezzoFinale = parseFloat(ordine.prezzo_totale) + parseFloat(prezzo_totale);
 
-      const pizzeFinali = [...pizzeEsistenti, ...pizze];
-      const prodottiFinali = [...prodottiEsistenti, ...prodotti];
-
-      // 🔑 Somma numerica sicura
-      const prezzoAttuale = parseFloat(ordine.prezzo_totale) || 0;
-      const prezzoNuovo = parseFloat(prezzo_totale) || 0;
-      const prezzoFinale = prezzoAttuale + prezzoNuovo;
-
-      const updateQuery = `
-        UPDATE Ordini 
-        SET prezzo_totale = ?, pizze = ?, prodotti = ?, orario_ordine = NOW()
-        WHERE tavolo_id = ?`;
-
-      db.query(
-        updateQuery,
-        [prezzoFinale, JSON.stringify(pizzeFinali), JSON.stringify(prodottiFinali), tavolo_id],
-        (err2) => {
-          if (err2) {
-            console.error("❌ Errore UPDATE:", err2);
-            return res.status(500).json({ error: "Errore DB" });
-          }
-          res.json({ success: true, action: "updated", tavolo_id, prezzo_totale: prezzoFinale });
-        }
+      await db.promise().query(
+        "UPDATE Ordini SET prezzo_totale = ?, pizze = ?, prodotti = ?, orario_ordine = NOW() WHERE tavolo_id = ?",
+        [prezzoFinale, JSON.stringify(pizzeFinali), JSON.stringify(prodottiFinali), tavolo_id]
       );
+
+      return res.json({ success: true, action: "updated", tavolo_id, prezzo_totale: prezzoFinale });
     } else {
-        const insertQuery = `
-          INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti, orario_ordine)
-          VALUES (?, ?, ?, ?, NOW())
-        `;
-
-
-      db.query(
-        insertQuery,
-        [tavolo_id, parseFloat(prezzo_totale) || 0, JSON.stringify(pizze), JSON.stringify(prodotti)],
-        (err3, result) => {
-          if (err3) {
-            console.error("❌ Errore INSERT:", err3);
-            return res.status(500).json({ error: "Errore DB" });
-          }
-          res.json({ success: true, action: "inserted", id: result.insertId });
-        }
+      // Nuovo ordine → insert
+      const [result] = await db.promise().query(
+        "INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti, orario_ordine) VALUES (?, ?, ?, ?, NOW())",
+        [tavolo_id, parseFloat(prezzo_totale), JSON.stringify(pizze), JSON.stringify(prodotti)]
       );
+
+      return res.json({ success: true, action: "inserted", id: result.insertId });
     }
-  });
+  } catch (err) {
+    console.error("❌ Errore POST /ordini:", err);
+    return res.status(500).json({ error: "Errore interno server" });
+  }
 });
+
+
 
 
 
@@ -533,7 +531,76 @@ app.put('/ingredienti/:id', (req, res) => {
   });
 });
 
+// GET: lista di tutti i prodotti
+app.get("/prodotti", (req, res) => {
+  db.query("SELECT * FROM prodotti", (err, results) => {
+    if (err) {
+      console.error("❌ Errore query prodotti:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+    res.json(results);
+  });
+});
 
+// POST: consuma un prodotto (decrementa la giacenza)
+app.post("/prodotti", (req, res) => {
+  const { id, quantita } = req.body;
+
+  if (!id || !quantita) {
+    return res.status(400).json({ error: "Parametri mancanti" });
+  }
+
+  // 1. Controlla giacenza attuale
+  db.query("SELECT giacenza FROM prodotti WHERE id = ?", [id], (err, rows) => {
+    if (err) {
+      console.error("❌ Errore query:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Prodotto non trovato" });
+    }
+
+    const giacenzaAttuale = rows[0].giacenza;
+    if (giacenzaAttuale < quantita) {
+      return res.status(400).json({ error: "Giacenza insufficiente" });
+    }
+
+    // 2. Aggiorna giacenza
+    db.query(
+      "UPDATE prodotti SET giacenza = giacenza - ? WHERE id = ?",
+      [quantita, id],
+      (err2) => {
+        if (err2) {
+          console.error("❌ Errore update:", err2);
+          return res.status(500).json({ error: "Errore aggiornamento DB" });
+        }
+        res.json({ message: "✅ Prodotto consumato", id, quantita });
+      }
+    );
+  });
+});
+
+app.post('/report/giornaliero/pizze', (req, res) => {
+  const { num_pizze, totale } = req.body;
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  console.log("📥 Report giornaliero pizze:", req.body);
+  const sql = `
+    INSERT INTO storico_giornaliero_pizze (data, num_pizze, totale)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      num_pizze = num_pizze + VALUES(num_pizze),
+      totale = totale + VALUES(totale)
+  `;
+
+  db.query(sql, [today, num_pizze, totale], (err) => {
+    if (err) {
+      console.error("❌ Errore inserimento report:", err);
+      return res.status(500).json({ error: "Errore DB" });
+    }
+    res.json({ success: true });
+  });
+});
 
 
 // avvio server

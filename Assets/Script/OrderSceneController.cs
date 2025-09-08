@@ -20,6 +20,9 @@ public class OrderSceneController : MonoBehaviour
     public Transform contenitorePizzeOrdinate;
     public GameObject rigaPizza;
 
+    public GameObject contenitoreProdotti;
+    public GameObject rigaProdotto;
+
     private Tavolo tavolo;
     private string statoOrdineCorrente = "";
 
@@ -28,47 +31,52 @@ public class OrderSceneController : MonoBehaviour
     
     public TextMeshProUGUI txtStatoOrdine; // 🟢 Drag & drop in Inspector
 
+    private List<ProdottoDB> prodottiDisponibili = new List<ProdottoDB>();
+    private Dictionary<int, int> prodottiSelezionati = new Dictionary<int, int>();
+
     void Start()
-{
-    tavolo = TavoloCorrenteRegistry.tavoloAttivo;
-    if (tavolo == null)
     {
-        Debug.LogWarning("Nessun tavolo attivo. Torno alle sale.");
-        SceneManager.LoadScene("SaleScene");
-        return;
-    }
-
-    if (txtTavolo) txtTavolo.text = tavolo.nominativo;
-
-    if (btnChiudi)
-        btnChiudi.onClick.AddListener(() => SceneManager.LoadScene("Ristorante"));
-
-    if (btnInviaOrdine)
-        btnInviaOrdine.onClick.AddListener(() =>
+        tavolo = TavoloCorrenteRegistry.tavoloAttivo;
+        if (tavolo == null)
         {
-            Debug.Log($"Ordine inviato per {tavolo.nominativo}");
-            // SceneManager.LoadScene("SaleScene");
-        });
-
-    // 🔹 1. Carica dal DB e visualizza
-    StartCoroutine(CaricaOrdineEsistente(tavolo.id));
-
-    // 🔹 2. Mostra anche pizze create a runtime
-    if (tavolo.ListaPizzeOrdinate.Count != 0)
-    {
-        foreach (Pizza p in tavolo.ListaPizzeOrdinate)
-        {
-            GameObject newriga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
-            ComponentiReference comp = newriga.GetComponent<ComponentiReference>();
-            comp.nome.text = $"Pizza di {p.proprietario}";
-            comp.prezzo.text = $"{p.prezzoTotale:F2}€";
-            comp.ingredienti.text = "Impasto:" + p.impasto + "\nIngredienti: " + p.ingredienti.ToCommaSeparatedString();
+            Debug.LogWarning("Nessun tavolo attivo. Torno alle sale.");
+            SceneManager.LoadScene("SaleScene");
+            return;
         }
-    }
-    InvokeRepeating(nameof(RefreshStatoOrdine), 5f, 5f); // ogni 5 secondi
 
-    AggiornaPrezzoTotale();
-}
+        if (txtTavolo) txtTavolo.text = tavolo.nominativo;
+
+        if (btnChiudi)
+            btnChiudi.onClick.AddListener(() => SceneManager.LoadScene("Ristorante"));
+
+        if (btnInviaOrdine)
+            btnInviaOrdine.onClick.AddListener(() =>
+            {
+                Debug.Log($"Ordine inviato per {tavolo.nominativo}");
+                // SceneManager.LoadScene("SaleScene");
+            });
+
+        // 🔹 1. Carica dal DB e visualizza
+        StartCoroutine(CaricaOrdineEsistente(tavolo.id));
+
+        // 🔹 2. Mostra anche pizze create a runtime
+        if (tavolo.ListaPizzeOrdinate.Count != 0)
+        {
+            foreach (Pizza p in tavolo.ListaPizzeOrdinate)
+            {
+                GameObject newriga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
+                ComponentiReference comp = newriga.GetComponent<ComponentiReference>();
+                comp.nome.text = $"Pizza di {p.proprietario}";
+                comp.prezzo.text = $"{p.prezzoTotale:F2}€";
+                comp.ingredienti.text = "Impasto:" + p.impasto + "\nIngredienti: " + p.ingredienti.ToCommaSeparatedString();
+            }
+        }
+        InvokeRepeating(nameof(RefreshStatoOrdine), 5f, 5f); // ogni 5 secondi
+
+        AggiornaPrezzoTotale();
+
+        StartCoroutine(CaricaProdotti());
+    }
 
 
     public void OnClickOrdina()
@@ -82,7 +90,6 @@ public class OrderSceneController : MonoBehaviour
 
     public void onClickRichiediConto()
     {
-        tavolo.stato = StatoTavolo.RichiestaConto;
         StartCoroutine(AggiornaStatoTavolo(tavolo.id, "RichiestaConto"));
         StartCoroutine(AggiornaStatoUltimoOrdine(tavolo.id, "RichiestaConto"));
     }
@@ -93,56 +100,77 @@ public class OrderSceneController : MonoBehaviour
 
     private void AggiornaPrezzoTotale()
     {
-        float totaleNuovo = tavolo.ListaPizzeOrdinate.Sum(p => p.GetPrezzo());
-        float totaleFinale = prezzoEsistente + totaleNuovo;
+        float totalePizze = tavolo.ListaPizzeOrdinate.Sum(p => p.GetPrezzo());
+        float totaleProdotti = prodottiDisponibili
+            .Where(p => prodottiSelezionati.ContainsKey(p.id))
+            .Sum(p => p.prezzo * prodottiSelezionati[p.id]);
+
+        float totaleFinale = prezzoEsistente + totalePizze + totaleProdotti;
         txtTotale.text = $"Totale: {totaleFinale:F2}€";
     }
 
 
 
-private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
-{
-    string urlPost = "http://localhost:3000/ordini";
 
-    var tavolo = TavoloCorrenteRegistry.tavoloAttivo;
-    if (tavolo == null)
+    private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
     {
-        Debug.LogError("Nessun tavolo attivo!");
-        yield break;
-    }
+        string urlPost = "http://localhost:3000/ordini";
 
-    // 🚀 Invia SOLO le pizze nuove
-    List<PizzaDTO> nuovePizze = new List<PizzaDTO>();
-    foreach (var p in tavolo.ListaPizzeOrdinate)
-    {
-        PizzaDTO nuova = new PizzaDTO
+        var tavolo = TavoloCorrenteRegistry.tavoloAttivo;
+        if (tavolo == null)
         {
-            nome = p.proprietario,
-            prezzo = p.GetPrezzo(),
-            impasto_nome = p.impasto.nome,
-            ingredienti = p.ingredienti.Select(i => i.nome).ToArray()
+            Debug.LogError("Nessun tavolo attivo!");
+            yield break;
+        }
+
+        // 🚀 Invia SOLO le pizze nuove
+        List<PizzaDTO> nuovePizze = new List<PizzaDTO>();
+        foreach (var p in tavolo.ListaPizzeOrdinate)
+        {
+            PizzaDTO nuova = new PizzaDTO
+            {
+                nome = p.proprietario,
+                prezzo = p.GetPrezzo(),
+                impasto_nome = p.impasto.nome,
+                ingredienti = p.ingredienti.Select(i => i.nome).ToArray()
+            };
+            nuovePizze.Add(nuova);
+        }
+
+        // 🔹 QUI inserisci il codice per i prodotti
+        List<ProdottoDTO> prodottiOrdine = new List<ProdottoDTO>();
+        foreach (var prod in prodottiDisponibili)
+        {
+            if (prodottiSelezionati.ContainsKey(prod.id) && prodottiSelezionati[prod.id] > 0)
+            {
+                prodottiOrdine.Add(new ProdottoDTO
+                {
+                    id = prod.id,
+                    nome = prod.nome,
+                    prezzo = prod.prezzo,
+                    quantita = prodottiSelezionati[prod.id]
+                });
+            }
+        }
+
+        OrderDTO payload = new OrderDTO
+        {
+            tavolo_id = tavolo.id,
+            prezzo_totale = nuovePizze.Sum(x => x.prezzo) + prodottiOrdine.Sum(p => p.prezzo * p.quantita),
+            pizze = nuovePizze.ToArray(),
+            prodotti = prodottiOrdine.ToArray()
         };
-        nuovePizze.Add(nuova);
-    }
 
-    OrderDTO payload = new OrderDTO
-    {
-        tavolo_id = tavolo.id,
-        prezzo_totale = nuovePizze.Sum(x => x.prezzo),
-        pizze = nuovePizze.ToArray(),
-        prodotti = new string[0]
-    };
+        string json = JsonUtility.ToJson(payload, true);
+        Debug.Log("📤 JSON inviato: " + json);
 
-    string json = JsonUtility.ToJson(payload, true);
-    Debug.Log("📤 Solo pizze nuove JSON inviato: " + json);
+        UnityWebRequest request = new UnityWebRequest(urlPost, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
 
-    UnityWebRequest request = new UnityWebRequest(urlPost, "POST");
-    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-    request.downloadHandler = new DownloadHandlerBuffer();
-    request.SetRequestHeader("Content-Type", "application/json");
-
-    yield return request.SendWebRequest();
+        yield return request.SendWebRequest();
 
         if (request.result != UnityWebRequest.Result.Success)
         {
@@ -154,12 +182,12 @@ private IEnumerator SalvaOrdineNelDB(System.Action onSuccess = null)
             Debug.Log("✅ Ordine salvato nel DB: " + request.downloadHandler.text);
             tavolo.ListaPizzeOrdinate.Clear(); // pulisco runtime
             onSuccess?.Invoke();
-
+        }
     }
-}
 
 
-private IEnumerator CaricaOrdineEsistente(int tavoloId)
+
+    private IEnumerator CaricaOrdineEsistente(int tavoloId)
 {
     string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
 
@@ -275,76 +303,72 @@ private void AggiornaStatoVisuale(string stato)
         }
     }
 
-private IEnumerator VerificaPrioritàOrdineEAvviaPreparazione(int tavoloId)
-{
-    string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
-    UnityWebRequest req = UnityWebRequest.Get(url);
-    yield return req.SendWebRequest();
-
-    if (req.result != UnityWebRequest.Result.Success)
+    private IEnumerator VerificaPrioritàOrdineEAvviaPreparazione(int tavoloId)
     {
-        Debug.LogError("❌ Errore nel recupero ordini: " + req.error);
-        yield break;
-    }
+        string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
+        UnityWebRequest req = UnityWebRequest.Get(url);
+        yield return req.SendWebRequest();
 
-    OrdineDB[] ordiniTavolo = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
-    var ordineAttivo = ordiniTavolo.LastOrDefault(o => o.stato != "Consegnato");
-
-    if (ordineAttivo == null)
-    {
-        Debug.Log("⚠️ Nessun ordine attivo da valutare.");
-        yield break;
-    }
-
-    // 🔹 Carichiamo tutti gli ordini dalla cucina ordinati cronologicamente
-    string allUrl = "http://localhost:3000/ordini/inviati";
-    UnityWebRequest allReq = UnityWebRequest.Get(allUrl);
-    yield return allReq.SendWebRequest();
-
-    if (allReq.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError("❌ Errore nel recupero ordini globali: " + allReq.error);
-        yield break;
-    }
-
-    OrdineDB[] ordiniInviati = JsonHelper.FromJson<OrdineDB>(allReq.downloadHandler.text);
-
-    // 🔎 Ordina per orario e prendi i primi 3
-    var primiTre = ordiniInviati
-        .Where(o => o.stato == "InAttesa" || o.stato == "OrdineInviato" || o.stato == "RichiestaConto" || o.stato == "InPreparazione")
-        .OrderBy(o => o.orario_ordine)
-        .Take(3)
-        .ToList();
-
-    if (primiTre.Any(o => o.id == ordineAttivo.id))
-    {
-        Debug.Log($"📦 Ordine {ordineAttivo.id} è tra i primi 3 → lo mettiamo in preparazione");
-
-        // aggiorna stato nel DB
-        string updateUrl = $"http://localhost:3000/ordini/{ordineAttivo.id}/stato";
-        string json = $@"{{ ""stato"": ""InPreparazione"" }}";
-
-        UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
-        updateReq.method = "PUT";
-        updateReq.SetRequestHeader("Content-Type", "application/json");
-        updateReq.downloadHandler = new DownloadHandlerBuffer();
-
-        yield return updateReq.SendWebRequest();
-
-        if (updateReq.result != UnityWebRequest.Result.Success)
+        if (req.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError("❌ Errore aggiornamento stato: " + updateReq.error);
+            Debug.LogError("❌ Errore nel recupero ordini: " + req.error);
+            yield break;
+        }
+
+        OrdineDB[] ordiniTavolo = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
+        var ordineAttivo = ordiniTavolo.LastOrDefault(o => o.stato != "Consegnato");
+
+        if (ordineAttivo == null)
+        {
+            Debug.Log("⚠️ Nessun ordine attivo da valutare.");
+            yield break;
+        }
+
+        // 🔹 Carichiamo tutti gli ordini dalla cucina ordinati cronologicamente
+        string allUrl = "http://localhost:3000/ordini/inviati";
+        UnityWebRequest allReq = UnityWebRequest.Get(allUrl);
+        yield return allReq.SendWebRequest();
+
+        if (allReq.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore nel recupero ordini globali: " + allReq.error);
+            yield break;
+        }
+
+        OrdineDB[] ordiniInviati = JsonHelper.FromJson<OrdineDB>(allReq.downloadHandler.text);
+
+        // 🔎 Ordina per orario e prendi i primi 3
+        var primiTre = ordiniInviati
+            .Where(o => o.stato == "InAttesa" || o.stato == "OrdineInviato" || o.stato == "RichiestaConto" || o.stato == "InPreparazione")
+            .OrderBy(o => o.orario_ordine)
+            .Take(3)
+            .ToList();
+
+        if (primiTre.Any(o => o.id == ordineAttivo.id) && ordineAttivo.stato == "InAttesa")
+        {
+            Debug.Log($"📦 Ordine {ordineAttivo.id} è tra i primi 3 e in attesa → lo mettiamo in preparazione");
+
+            string updateUrl = $"http://localhost:3000/ordini/{ordineAttivo.id}/stato";
+            string json = $@"{{ ""stato"": ""InPreparazione"" }}";
+
+            UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
+            updateReq.method = "PUT";
+            updateReq.SetRequestHeader("Content-Type", "application/json");
+            updateReq.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return updateReq.SendWebRequest();
+
+            if (updateReq.result != UnityWebRequest.Result.Success)
+                Debug.LogError("❌ Errore aggiornamento stato: " + updateReq.error);
+            else
+                Debug.Log($"✅ Ordine {ordineAttivo.id} aggiornato a InPreparazione");
         }
         else
         {
-            Debug.Log($"✅ Ordine {ordineAttivo.id} aggiornato a InPreparazione");
+            Debug.Log($"ℹ️ Ordine {ordineAttivo.id} non aggiornato: stato attuale = {ordineAttivo.stato}");
         }
+
     }
-    else
-    {
-        Debug.Log($"ℹ️ Ordine {ordineAttivo.id} NON è tra i primi 3 → resta in attesa");
-    }
-}
 
 
     private IEnumerator AggiornaStatoUltimoOrdine(int tavoloId, string nuovoStato)
@@ -362,7 +386,7 @@ private IEnumerator VerificaPrioritàOrdineEAvviaPreparazione(int tavoloId)
         }
 
         OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
-        var ultimoAttivo = ordini.LastOrDefault(o => o.stato != "Consegnato");
+        var ultimoAttivo = ordini.LastOrDefault(o => o.stato == "Consegnato");
 
         if (ultimoAttivo == null)
         {
@@ -421,19 +445,71 @@ private IEnumerator VerificaPrioritàOrdineEAvviaPreparazione(int tavoloId)
     }
 
     public static class JsonHelper
-{
-    public static T[] FromJson<T>(string json)
     {
-        string newJson = "{ \"array\": " + json + "}";
-        return JsonUtility.FromJson<Wrapper<T>>(newJson).array;
+        public static T[] FromJson<T>(string json)
+        {
+            string newJson = "{ \"array\": " + json + "}";
+            return JsonUtility.FromJson<Wrapper<T>>(newJson).array;
+        }
+
+        [System.Serializable]
+        private class Wrapper<T>
+        {
+            public T[] array;
+        }
     }
 
-    [System.Serializable]
-    private class Wrapper<T>
+
+    
+    // idProdotto → quantità scelta
+
+    private IEnumerator CaricaProdotti()
     {
-        public T[] array;
+        string url = "http://localhost:3000/prodotti"; // endpoint backend
+        UnityWebRequest req = UnityWebRequest.Get(url);
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("❌ Errore caricamento prodotti: " + req.error);
+            yield break;
+        }
+
+        string json = req.downloadHandler.text;
+        ProdottoDB[] prodotti = JsonHelper.FromJson<ProdottoDB>(json);
+        prodottiDisponibili = new List<ProdottoDB>(prodotti);
+
+        // Instanzia righe
+        foreach (var prod in prodottiDisponibili)
+        {
+            GameObject riga = Instantiate(rigaProdotto, contenitoreProdotti.transform);
+            RigaProdotti comp = riga.GetComponent<RigaProdotti>();
+
+            comp.nome.text = prod.nome;
+            comp.prezzo.text = $"{prod.prezzo:F2}€";
+            comp.quantita.text = "0";
+
+            prodottiSelezionati[prod.id] = 0;
+
+            // 🔘 Gestione pulsanti
+            comp.add.onClick.AddListener(() =>
+            {
+                prodottiSelezionati[prod.id]++;
+                comp.quantita.text = prodottiSelezionati[prod.id].ToString();
+                AggiornaPrezzoTotale();
+            });
+
+            comp.remove.onClick.AddListener(() =>
+            {
+                if (prodottiSelezionati[prod.id] > 0)
+                {
+                    prodottiSelezionati[prod.id]--;
+                    comp.quantita.text = prodottiSelezionati[prod.id].ToString();
+                    AggiornaPrezzoTotale();
+                }
+            });
+        }
     }
-}
 
 
 }
@@ -452,8 +528,25 @@ public class OrderDTO
     public int tavolo_id;
     public float prezzo_totale;
     public PizzaDTO[] pizze;
-    public string[] prodotti;
+    public ProdottoDTO[] prodotti;
 }
 
 
+[System.Serializable]
+public class ProdottoDB
+{
+    public int id;
+    public string nome;
+    public float prezzo;
+    public int giacenza;
+}
+
+[System.Serializable]
+public class ProdottoDTO
+{
+    public int id;
+    public string nome;
+    public float prezzo;
+    public int quantita;
+}
 
