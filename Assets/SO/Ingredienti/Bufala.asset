@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Bufala
   m_EditorClassIdentifier: 
-  id: 6
+  id: 3
   nome: Bufala
   prezzo: 2
-  quantita: 10
-  sprite: {fileID: 21300000, guid: e33803f7c42c28649b2a941c8f9dd329, type: 3}
-  layer: 3
-  singolo: 1
+  quantita: 5
+  sprite: {fileID: 0}
+  layer: 0
+  singolo: 0

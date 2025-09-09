@@ -10,9 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
-  m_Name: Olive
+  m_Name: Salsa di Pomodoro
   m_EditorClassIdentifier: 
-  id: 2
-  nome: Olive
-  prezzo: 1
-  quantita: 0
+  id: 1
+  nome: Salsa di Pomodoro
+  prezzo: 400
+  quantita: 45
+  sprite: {fileID: 21300000, guid: 9212091f737ed1a478db9be5e8eb1e8b, type: 3}
+  layer: 3
+  singolo: 1

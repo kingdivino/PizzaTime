@@ -502,15 +502,20 @@ app.post("/ingredienti", (req, res) => {
 
 // Lista ingredienti
 app.get('/ingredienti', (req, res) => {
-  const q = 'SELECT id, nome, giacenza AS quantita FROM ingredienti ORDER BY nome';
+  const q = 'SELECT id, nome, prezzo, giacenza AS quantita FROM ingredienti ORDER BY nome';
   db.query(q, (err, rows) => {
     if (err) {
       console.error("❌ Errore select:", err);
       return res.status(500).json({ error: 'Errore DB' });
     }
-    res.json(rows); // ← array JSON
+
+    // log di debug
+    console.log("📦 Ingredienti dal DB:", rows);
+
+    res.json(rows); // array JSON
   });
 });
+
 
 // Dettaglio singolo ingrediente (opzionale)
 app.get('/ingredienti/:id', (req, res) => {
@@ -528,16 +533,37 @@ app.get('/ingredienti/:id', (req, res) => {
 // Già esistente: aggiorna giacenza
 app.put('/ingredienti/:id', (req, res) => {
   const id = req.params.id;
-  const quantita = req.body.quantita;           // Unity manda "quantita"
-  const query = 'UPDATE ingredienti SET giacenza = ? WHERE id = ?';
-  db.query(query, [quantita, id], (err) => {
+  const { quantita, prezzo } = req.body;
+
+  const updates = [];
+  const values = [];
+
+  if (quantita !== undefined) {
+    updates.push("quantita = ?");
+    values.push(quantita);
+  }
+
+  if (prezzo !== undefined) {
+    updates.push("prezzo = ?");
+    values.push(prezzo);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: "Nessun campo valido da aggiornare" });
+  }
+
+  values.push(id);
+  const query = `UPDATE ingredienti SET ${updates.join(", ")} WHERE id = ?`;
+
+  db.query(query, values, (err) => {
     if (err) {
       console.error("❌ Errore update:", err);
-      return res.status(500).json({ error: 'Errore DB' });
+      return res.status(500).json({ error: "Errore DB" });
     }
     res.json({ success: true });
   });
 });
+
 
 // GET: lista di tutti i prodotti
 app.get("/prodotti", (req, res) => {
@@ -609,6 +635,43 @@ app.post('/report/giornaliero/pizze', (req, res) => {
     res.json({ success: true });
   });
 });
+
+// PUT /prodotti/:id
+app.put('/prodotti/:id', (req, res) => {
+  const id = req.params.id;
+  const { quantita, giacenza, prezzo } = req.body;
+
+  // decidi cosa aggiornare
+  const updates = [];
+  const values = [];
+
+  if (quantita !== undefined || giacenza !== undefined) {
+    // supporta sia "quantita" che "giacenza"
+    updates.push("giacenza = ?");
+    values.push(quantita ?? giacenza);
+  }
+
+  if (prezzo !== undefined) {
+    updates.push("prezzo = ?");
+    values.push(prezzo);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: "Nessun campo valido da aggiornare" });
+  }
+
+  values.push(id);
+  const query = `UPDATE prodotti SET ${updates.join(", ")} WHERE id = ?`;
+
+  db.query(query, values, (err) => {
+    if (err) {
+      console.error("❌ Errore update:", err);
+      return res.status(500).json({ error: 'Errore DB' });
+    }
+    res.json({ success: true });
+  });
+});
+
 
 
 // avvio server
