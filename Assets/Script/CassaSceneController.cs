@@ -67,6 +67,7 @@ public class CassaSceneController : MonoBehaviour
             Destroy(child.gameObject);
 
         totaleOrdine = 0f;
+        Debug.Log($"🧾 Ordini RichiestaConto trovati: {ordiniFiltrati.Count}");
 
         foreach (var ordine in ordiniFiltrati)
         {

@@ -91,10 +91,27 @@ public class OrderSceneController : MonoBehaviour
     public void onClickRichiediConto()
     {
         StartCoroutine(AggiornaStatoTavolo(tavolo.id, "RichiestaConto"));
-        StartCoroutine(AggiornaStatoUltimoOrdine(tavolo.id, "RichiestaConto"));
+        StartCoroutine(AggiornaStatoOrdiniAttivi(tavolo.id, "RichiestaConto"));
     }
 
 
+
+private void ResetProdottiSelezionati()
+{
+    foreach (Transform riga in contenitoreProdotti.transform)
+    {
+        RigaProdotti comp = riga.GetComponent<RigaProdotti>();
+        if (comp != null)
+        {
+            comp.quantita.text = "0";
+        }
+    }
+
+    foreach (var key in prodottiSelezionati.Keys.ToList())
+    {
+        prodottiSelezionati[key] = 0;
+    }
+}
 
 
 
@@ -180,8 +197,32 @@ public class OrderSceneController : MonoBehaviour
         else
         {
             Debug.Log("✅ Ordine salvato nel DB: " + request.downloadHandler.text);
-            tavolo.ListaPizzeOrdinate.Clear(); // pulisco runtime
+            tavolo.ListaPizzeOrdinate.Clear();
+
+
+
+// 🔁 Visualizza anche i prodotti appena ordinati
+foreach (var prodotto in prodottiOrdine)
+{
+    GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
+    var comp = riga.GetComponent<ComponentiReference>();
+
+    comp.nome.text = $"Prodotto: {prodotto.nome}";
+    comp.prezzo.text = $"{(prodotto.prezzo * prodotto.quantita):F2}€";
+    comp.ingredienti.text = $"Quantità: {prodotto.quantita} × {prodotto.prezzo:F2}€";
+}
+
+            // pulisco runtime
+            float totaleProdottiOrdinati = prodottiOrdine.Sum(p => p.prezzo * p.quantita);
+            prezzoEsistente += totaleProdottiOrdinati;
+
+            ResetProdottiSelezionati();
+            AggiornaPrezzoTotale();
+                
+    // aggiorna il totale visivo
             onSuccess?.Invoke();
+
+
         }
     }
 
@@ -221,6 +262,20 @@ public class OrderSceneController : MonoBehaviour
                 comp.prezzo.text = $"{pizza.prezzo:F2}€";
                 comp.ingredienti.text = $"Impasto: {pizza.impasto_nome}\nIngredienti: {string.Join(", ", pizza.ingredienti ?? new string[0])}";
             }
+
+            ProdottoDTO[] prodotti = ParseProdottiJson(ordine.prodotti);
+
+            foreach (var prodotto in prodotti)
+            {
+                GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
+                var comp = riga.GetComponent<ComponentiReference>();
+
+                comp.nome.text = $"Prodotto: {prodotto.nome}";
+                comp.prezzo.text = $"{(prodotto.prezzo * prodotto.quantita):F2}€";
+                comp.ingredienti.text = $"Quantità: {prodotto.quantita} × {prodotto.prezzo:F2}€";
+            }
+
+
 
             prezzoEsistente += ordine.prezzo_totale;
         }
@@ -371,9 +426,8 @@ private void AggiornaStatoVisuale(string stato)
     }
 
 
-    private IEnumerator AggiornaStatoUltimoOrdine(int tavoloId, string nuovoStato)
+    private IEnumerator AggiornaStatoOrdiniAttivi(int tavoloId, string nuovoStato)
     {
-        // recupera l’ultimo ordine NON consegnato
         string url = $"http://localhost:3000/ordini?tavoloId={tavoloId}";
 
         UnityWebRequest req = UnityWebRequest.Get(url);
@@ -381,35 +435,39 @@ private void AggiornaStatoVisuale(string stato)
 
         if (req.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError("❌ Errore nel recupero ordine: " + req.error);
+            Debug.LogError("❌ Errore nel recupero ordini: " + req.error);
             yield break;
         }
 
         OrdineDB[] ordini = JsonHelper.FromJson<OrdineDB>(req.downloadHandler.text);
-        var ultimoAttivo = ordini.LastOrDefault(o => o.stato == "Consegnato");
+        var ordiniAttivi = ordini.Where(o => o.stato != "Chiuso").ToList();
 
-        if (ultimoAttivo == null)
+        if (ordiniAttivi.Count == 0)
         {
-            Debug.LogWarning("⚠️ Nessun ordine attivo da aggiornare.");
+            Debug.Log("⚠️ Nessun ordine da aggiornare");
             yield break;
         }
 
-        // ora aggiorna lo stato
-        string updateUrl = $"http://localhost:3000/ordini/{ultimoAttivo.id}/stato";
-        string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
+        foreach (var ordine in ordiniAttivi)
+        {
+            string updateUrl = $"http://localhost:3000/ordini/{ordine.id}/stato";
+            string json = $@"{{ ""stato"": ""{nuovoStato}"" }}";
 
-        UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
-        updateReq.method = "PUT";
-        updateReq.SetRequestHeader("Content-Type", "application/json");
-        updateReq.downloadHandler = new DownloadHandlerBuffer();
+            UnityWebRequest updateReq = UnityWebRequest.Put(updateUrl, json);
+            updateReq.method = "PUT";
+            updateReq.SetRequestHeader("Content-Type", "application/json");
+            updateReq.downloadHandler = new DownloadHandlerBuffer();
 
-        yield return updateReq.SendWebRequest();
+            yield return updateReq.SendWebRequest();
 
-        if (updateReq.result != UnityWebRequest.Result.Success)
-            Debug.LogError("❌ Errore aggiornamento stato ordine: " + updateReq.error);
-        else
-            Debug.Log($"✅ Stato ordine {ultimoAttivo.id} aggiornato a '{nuovoStato}'");
+            if (updateReq.result != UnityWebRequest.Result.Success)
+                Debug.LogError($"❌ Errore aggiornamento ordine {ordine.id}: " + updateReq.error);
+            else
+                Debug.Log($"✅ Ordine {ordine.id} aggiornato a '{nuovoStato}'");
+        }
     }
+
+
 
 
 
@@ -443,6 +501,23 @@ private void AggiornaStatoVisuale(string stato)
         PizzaWrapper wrapper = JsonUtility.FromJson<PizzaWrapper>(wrapped);
         return wrapper.array;
     }
+    private ProdottoDTO[] ParseProdottiJson(string prodottiJson)
+    {
+        if (string.IsNullOrEmpty(prodottiJson)) return new ProdottoDTO[0];
+        string cleaned = prodottiJson.Replace("\\\"", "\"").Trim();
+        string wrapped = "{\"array\":" + cleaned + "}";
+        ProdottoWrapper wrapper = JsonUtility.FromJson<ProdottoWrapper>(wrapped);
+        return wrapper.array ?? new ProdottoDTO[0];
+    }
+
+
+    [System.Serializable]
+    public class ProdottoWrapper
+    {
+        public ProdottoDTO[] array;
+    }
+
+
 
     public static class JsonHelper
     {

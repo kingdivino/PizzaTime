@@ -287,55 +287,63 @@ app.post("/ordini", async (req, res) => {
   const { tavolo_id, prezzo_totale, pizze, prodotti } = req.body;
 
   try {
-    // 1️⃣ Controllo e decremento giacenza prodotti
-    for (const p of prodotti) {
-      const [rows] = await db.promise().query(
-        "SELECT giacenza FROM prodotti WHERE id = ?",
-        [p.id]
-      );
+// 1️⃣ Controllo e decremento giacenza prodotti
+for (const p of prodotti) {
+  const [rows] = await db.promise().query(
+    "SELECT giacenza FROM prodotti WHERE id = ?",
+    [p.id]
+  );
 
-      if (rows.length === 0) {
-        return res.status(404).json({ error: `Prodotto id=${p.id} non trovato` });
-      }
+  if (rows.length === 0) {
+    return res.status(404).json({ error: `Prodotto id=${p.id} non trovato` });
+  }
 
-      if (rows[0].giacenza < p.quantita) {
-        return res.status(400).json({ error: `Giacenza insufficiente per prodotto id=${p.id}` });
-      }
+  if (rows[0].giacenza < p.quantita) {
+    return res.status(400).json({ error: `Giacenza insufficiente per prodotto id=${p.id}` });
+  }
 
-      await db.promise().query(
-        "UPDATE prodotti SET giacenza = giacenza - ? WHERE id = ?",
-        [p.quantita, p.id]
-      );
-    }
+  await db.promise().query(
+    "UPDATE prodotti SET giacenza = giacenza - ? WHERE id = ?",
+    [p.quantita, p.id]
+  );
+}
 
-    // 2️⃣ Controllo se esiste già un ordine "in attesa" per questo tavolo
-    const [existingOrders] = await db.promise().query(
-      "SELECT * FROM Ordini WHERE tavolo_id = ? AND stato = 'inAttesa' LIMIT 1",
-      [tavolo_id]
-    );
+// 2️⃣ Controlla prima se c'è un ordine in ATTESA
+const [ordiniInAttesa] = await db.promise().query(
+  "SELECT * FROM Ordini WHERE tavolo_id = ? AND stato = 'InAttesa' LIMIT 1",
+  [tavolo_id]
+);
 
-    if (existingOrders.length > 0) {
-      // Ordine esistente → update
-      const ordine = existingOrders[0];
-      const pizzeFinali = [...JSON.parse(ordine.pizze || "[]"), ...pizze];
-      const prodottiFinali = [...JSON.parse(ordine.prodotti || "[]"), ...prodotti];
-      const prezzoFinale = parseFloat(ordine.prezzo_totale) + parseFloat(prezzo_totale);
+if (ordiniInAttesa.length > 0) {
+  // ✏️ AGGIORNA ordine esistente
+  const ordine = ordiniInAttesa[0];
+  const pizzeFinali = [...JSON.parse(ordine.pizze || "[]"), ...pizze];
+  const prodottiFinali = [...JSON.parse(ordine.prodotti || "[]"), ...prodotti];
+  const prezzoFinale = parseFloat(ordine.prezzo_totale || 0) + parseFloat(prezzo_totale || 0);
 
-      await db.promise().query(
-        "UPDATE Ordini SET prezzo_totale = ?, pizze = ?, prodotti = ?, orario_ordine = NOW() WHERE tavolo_id = ?",
-        [prezzoFinale, JSON.stringify(pizzeFinali), JSON.stringify(prodottiFinali), tavolo_id]
-      );
+  await db.promise().query(
+    "UPDATE Ordini SET prezzo_totale = ?, pizze = ?, prodotti = ?, orario_ordine = NOW() WHERE id = ?",
+    [prezzoFinale, JSON.stringify(pizzeFinali), JSON.stringify(prodottiFinali), ordine.id]
+  );
 
-      return res.json({ success: true, action: "updated", tavolo_id, prezzo_totale: prezzoFinale });
-    } else {
-      // Nuovo ordine → insert
-      const [result] = await db.promise().query(
-        "INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti, orario_ordine) VALUES (?, ?, ?, ?, NOW())",
-        [tavolo_id, parseFloat(prezzo_totale), JSON.stringify(pizze), JSON.stringify(prodotti)]
-      );
+  return res.json({ success: true, action: "updated", id: ordine.id, prezzo_totale: prezzoFinale });
+}
 
-      return res.json({ success: true, action: "inserted", id: result.insertId });
-    }
+// 3️⃣ Se non c’è un ordine in attesa, controlla se c'è uno in preparazione
+const [ordiniInPreparazione] = await db.promise().query(
+  "SELECT * FROM Ordini WHERE tavolo_id = ? AND stato = 'InPreparazione' LIMIT 1",
+  [tavolo_id]
+);
+
+// In entrambi i casi (inPreparazione o nessuno), CREIAMO UN NUOVO ORDINE
+const [result] = await db.promise().query(
+  "INSERT INTO Ordini (tavolo_id, prezzo_totale, pizze, prodotti, stato, orario_ordine) VALUES (?, ?, ?, ?, 'InAttesa', NOW())",
+  [tavolo_id, parseFloat(prezzo_totale), JSON.stringify(pizze), JSON.stringify(prodotti)]
+);
+
+return res.json({ success: true, action: "inserted", id: result.insertId });
+
+
   } catch (err) {
     console.error("❌ Errore POST /ordini:", err);
     return res.status(500).json({ error: "Errore interno server" });
@@ -401,7 +409,7 @@ app.get("/ordini/inviati", (req, res) => {
     SELECT o.*, t.nominativo AS tavolo_nome
     FROM Ordini o
     JOIN Tavoli t ON t.id = o.tavolo_id
-    WHERE o.stato != 'Consegnato' and o.stato != 'Chiuso'
+    WHERE o.stato != 'Consegnato' and o.stato != 'Chiuso' and o.stato != 'RichiestaConto'
     ORDER BY o.orario_ordine ASC
   `;
 
