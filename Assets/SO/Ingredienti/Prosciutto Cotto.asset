@@ -16,6 +16,6 @@ MonoBehaviour:
   nome: Prosciutto Cotto
   prezzo: 1
   quantita: 12
-  sprite: {fileID: 21300000, guid: 620a3b553eadb5541b9b96a4d32b32eb, type: 3}
+  sprite: {fileID: 0}
   layer: 2
   singolo: 1

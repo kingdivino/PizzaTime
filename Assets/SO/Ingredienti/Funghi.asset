@@ -16,6 +16,6 @@ MonoBehaviour:
   nome: Funghi
   prezzo: 2
   quantita: 10
-  sprite: {fileID: 21300000, guid: e33803f7c42c28649b2a941c8f9dd329, type: 3}
+  sprite: {fileID: 21300000, guid: b4b7eca8cb98719408a80113f71491ad, type: 3}
   layer: 3
   singolo: 1
