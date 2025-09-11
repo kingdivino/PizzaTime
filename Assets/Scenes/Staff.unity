@@ -701,6 +701,7 @@ GameObject:
   - component: {fileID: 578050274}
   - component: {fileID: 578050273}
   - component: {fileID: 578050272}
+  - component: {fileID: 578050275}
   m_Layer: 5
   m_Name: Button (1)
   m_TagString: Untagged
@@ -771,7 +772,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 578050273}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 578050275}
+        m_TargetAssemblyTypeName: OpenButton, Assembly-CSharp
+        m_MethodName: OpenScena
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &578050273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -810,6 +823,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 578050270}
   m_CullTransparentMesh: 1
+--- !u!114 &578050275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578050270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17bc482958f29fc47980cb28ccb9764e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scena: Storico
 --- !u!1 &595672081
 GameObject:
   m_ObjectHideFlags: 0

@@ -35,6 +35,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Staff.unity
     guid: 4db58b18f11540f40bda76d41ec12b8a
+  - enabled: 1
+    path: Assets/Scenes/Storico.unity
+    guid: 1e455679c58138e4baf81d2d956eb972
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
