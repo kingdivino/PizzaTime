@@ -53,6 +53,11 @@ public class OrderSceneController : MonoBehaviour
             btnInviaOrdine.onClick.AddListener(() =>
             {
                 Debug.Log($"Ordine inviato per {tavolo.nominativo}");
+                        StartCoroutine(SalvaOrdineNelDB(() =>
+        {
+            tavolo.stato = StatoTavolo.OrdineInviato;
+            StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
+        }));
                 // SceneManager.LoadScene("SaleScene");
             });
 
@@ -81,11 +86,7 @@ public class OrderSceneController : MonoBehaviour
 
     public void OnClickOrdina()
     {
-        StartCoroutine(SalvaOrdineNelDB(() =>
-        {
-            tavolo.stato = StatoTavolo.OrdineInviato;
-            StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
-        }));
+
     }
 
     public void onClickRichiediConto()
@@ -194,36 +195,39 @@ private void ResetProdottiSelezionati()
             Debug.LogError("❌ Errore salvataggio ordine: " + request.error +
                            "\nRisposta: " + request.downloadHandler.text);
         }
+
         else
         {
             Debug.Log("✅ Ordine salvato nel DB: " + request.downloadHandler.text);
+
+            // 🔹 aggiungi il prezzo delle pizze inviate al totale esistente
+            float totalePizzeInviate = nuovePizze.Sum(x => x.prezzo);
+            prezzoEsistente += totalePizzeInviate;
+
+            // 🔹 pulisci solo le pizze nuove dalla lista runtime
             tavolo.ListaPizzeOrdinate.Clear();
 
+            // 🔁 Visualizza i prodotti appena ordinati...
+            foreach (var prodotto in prodottiOrdine)
+            {
+                GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
+                var comp = riga.GetComponent<ComponentiReference>();
 
+                comp.nome.text = $"Prodotto: {prodotto.nome}";
+                comp.prezzo.text = $"{(prodotto.prezzo * prodotto.quantita):F2}€";
+                comp.ingredienti.text = $"Quantità: {prodotto.quantita} × {prodotto.prezzo:F2}€";
+            }
 
-// 🔁 Visualizza anche i prodotti appena ordinati
-foreach (var prodotto in prodottiOrdine)
-{
-    GameObject riga = Instantiate(rigaPizza, contenitorePizzeOrdinate);
-    var comp = riga.GetComponent<ComponentiReference>();
-
-    comp.nome.text = $"Prodotto: {prodotto.nome}";
-    comp.prezzo.text = $"{(prodotto.prezzo * prodotto.quantita):F2}€";
-    comp.ingredienti.text = $"Quantità: {prodotto.quantita} × {prodotto.prezzo:F2}€";
-}
-
-            // pulisco runtime
             float totaleProdottiOrdinati = prodottiOrdine.Sum(p => p.prezzo * p.quantita);
             prezzoEsistente += totaleProdottiOrdinati;
 
             ResetProdottiSelezionati();
             AggiornaPrezzoTotale();
-                
-    // aggiorna il totale visivo
+
             onSuccess?.Invoke();
-
-
         }
+
+
     }
 
 

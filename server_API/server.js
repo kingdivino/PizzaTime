@@ -539,7 +539,7 @@ app.put('/ingredienti/:id', (req, res) => {
   const values = [];
 
   if (quantita !== undefined) {
-    updates.push("quantita = ?");
+    updates.push("giacenza = ?");
     values.push(quantita);
   }
 
@@ -671,6 +671,24 @@ app.put('/prodotti/:id', (req, res) => {
     res.json({ success: true });
   });
 });
+
+
+app.get('/storico', (req, res) => {
+  const q = `
+    SELECT DATE(data) AS data, num_pizze, totale
+    FROM storico_giornaliero_pizze
+    ORDER BY data DESC
+  `;
+  db.query(q, (err, rows) => {
+    if (err) {
+      console.error("❌ Errore SELECT storico:", err);
+      return res.status(500).json({ error: 'Errore DB' });
+    }
+    res.json(rows);
+  });
+});
+
+
 
 
 
