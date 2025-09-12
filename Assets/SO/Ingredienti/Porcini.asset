@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Porcini
   m_EditorClassIdentifier: 
-  id: 19
+  id: 15
   nome: Porcini
   prezzo: 3
-  quantita: 45
+  quantita: 18
   sprite: {fileID: 21300000, guid: 0d38db68b18947c48b4fb56d5fd90149, type: 3}
   layer: 5
   singolo: 0

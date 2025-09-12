@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Uovo
   m_EditorClassIdentifier: 
-  id: 1
+  id: 21
   nome: Uova sode
   prezzo: 1
-  quantita: 45
+  quantita: 10
   sprite: {fileID: -5493738679081911691, guid: 1ec8306350be4cf4cb9c83913a17fadd, type: 3}
   layer: 5
   singolo: 0

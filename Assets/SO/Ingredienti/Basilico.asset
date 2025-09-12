@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 8
   nome: Basilico
-  prezzo: 1
-  quantita: 45
+  prezzo: 2
+  quantita: 64
   sprite: {fileID: 21300000, guid: cf0e7a48e6c8b0b47a3f2f18a47abc93, type: 3}
-  layer: 6
+  layer: 10
   singolo: 0

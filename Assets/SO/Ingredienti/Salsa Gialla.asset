@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Salsa Gialla
   m_EditorClassIdentifier: 
-  id: 9
+  id: 18
   nome: Salsa Gialla
   prezzo: 3
-  quantita: 45
+  quantita: 12
   sprite: {fileID: 21300000, guid: 606c285651610374ba56b400b512776a, type: 3}
   layer: 3
   singolo: 1

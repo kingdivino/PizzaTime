@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Ciliegino
   m_EditorClassIdentifier: 
-  id: 1
+  id: 12
   nome: Ciliegino
-  prezzo: 2
-  quantita: 45
+  prezzo: 3
+  quantita: 30
   sprite: {fileID: 21300000, guid: 194afc9a7f676854c8ca6a4d433e758e, type: 3}
   layer: 6
   singolo: 0

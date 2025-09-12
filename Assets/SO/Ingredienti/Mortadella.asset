@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Mortadella
   m_EditorClassIdentifier: 
-  id: 10
+  id: 13
   nome: Mortadella
-  prezzo: 2
-  quantita: 45
+  prezzo: 2.5
+  quantita: 20
   sprite: {fileID: 21300000, guid: d401c1486288005408bd67f52f306355, type: 3}
   layer: 5
   singolo: 0

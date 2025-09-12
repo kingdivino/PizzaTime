@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Burrata
   m_EditorClassIdentifier: 
-  id: 12
+  id: 20
   nome: Burrata
   prezzo: 4
-  quantita: 45
+  quantita: 10
   sprite: {fileID: 21300000, guid: 4e2503f4b1d2d3f40b89e6ff73f6b737, type: 3}
   layer: 7
   singolo: 1

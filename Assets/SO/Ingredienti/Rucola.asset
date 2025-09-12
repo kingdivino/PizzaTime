@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Rucola
   m_EditorClassIdentifier: 
-  id: 1
+  id: 10
   nome: Rucola
-  prezzo: 1.5
-  quantita: 45
+  prezzo: 0.5
+  quantita: 15
   sprite: {fileID: 21300000, guid: df85da760866f064ab4e80bcf4a02f8d, type: 3}
-  layer: 4
+  layer: 5
   singolo: 0

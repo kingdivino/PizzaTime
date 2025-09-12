@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cafa91b42d468d44eb8b0331651f0b0f, type: 3}
   m_Name: Cipolla
   m_EditorClassIdentifier: 
-  id: 17
+  id: 9
   nome: Cipolla
   prezzo: 1
-  quantita: 45
+  quantita: 20
   sprite: {fileID: 2401177227596859304, guid: 699c9caa96fd3d2489546be9cd283bd0, type: 3}
   layer: 5
   singolo: 0

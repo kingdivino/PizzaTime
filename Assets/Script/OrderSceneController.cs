@@ -49,17 +49,17 @@ public class OrderSceneController : MonoBehaviour
         if (btnChiudi)
             btnChiudi.onClick.AddListener(() => SceneManager.LoadScene("Ristorante"));
 
-        if (btnInviaOrdine)
-            btnInviaOrdine.onClick.AddListener(() =>
-            {
-                Debug.Log($"Ordine inviato per {tavolo.nominativo}");
-                        StartCoroutine(SalvaOrdineNelDB(() =>
-        {
-            tavolo.stato = StatoTavolo.OrdineInviato;
-            StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
-        }));
-                // SceneManager.LoadScene("SaleScene");
-            });
+        // if (btnInviaOrdine)
+        //     btnInviaOrdine.onClick.AddListener(() =>
+        //     {
+        //         Debug.Log($"Ordine inviato per {tavolo.nominativo}");
+        //                 StartCoroutine(SalvaOrdineNelDB(() =>
+        // {
+        //     tavolo.stato = StatoTavolo.OrdineInviato;
+        //     StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
+        // }));
+        //         // SceneManager.LoadScene("SaleScene");
+        //     });
 
         // 🔹 1. Carica dal DB e visualizza
         StartCoroutine(CaricaOrdineEsistente(tavolo.id));
@@ -84,10 +84,12 @@ public class OrderSceneController : MonoBehaviour
     }
 
 
-    public void OnClickOrdina()
-    {
-
-    }
+ public void OnClickOrdina() {
+        StartCoroutine(SalvaOrdineNelDB(() =>
+ {
+     tavolo.stato = StatoTavolo.OrdineInviato;
+      StartCoroutine(AggiornaStatoTavolo(tavolo.id, "OrdineInviato"));
+  })); }
 
     public void onClickRichiediConto()
     {
@@ -571,22 +573,28 @@ private void AggiornaStatoVisuale(string stato)
             prodottiSelezionati[prod.id] = 0;
 
             // 🔘 Gestione pulsanti
-            comp.add.onClick.AddListener(() =>
-            {
-                prodottiSelezionati[prod.id]++;
-                comp.quantita.text = prodottiSelezionati[prod.id].ToString();
-                AggiornaPrezzoTotale();
-            });
+// collegamento pulsanti
+            comp.add.onClick.AddListener(() => AggiungiProdotto(prod, comp));
+            comp.remove.onClick.AddListener(() => RimuoviProdotto(prod, comp));
 
-            comp.remove.onClick.AddListener(() =>
-            {
-                if (prodottiSelezionati[prod.id] > 0)
-                {
-                    prodottiSelezionati[prod.id]--;
-                    comp.quantita.text = prodottiSelezionati[prod.id].ToString();
-                    AggiornaPrezzoTotale();
-                }
-            });
+        }
+    }
+
+    private void AggiungiProdotto(ProdottoDB prod, RigaProdotti comp)
+    {
+        prodottiSelezionati[prod.id]++;
+        comp.quantita.text = prodottiSelezionati[prod.id].ToString();
+        AggiornaPrezzoTotale();
+    }
+
+
+    private void RimuoviProdotto(ProdottoDB prod, RigaProdotti comp)
+    {
+        if (prodottiSelezionati[prod.id] > 0)
+        {
+            prodottiSelezionati[prod.id]--;
+            comp.quantita.text = prodottiSelezionati[prod.id].ToString();
+            AggiornaPrezzoTotale();
         }
     }
 

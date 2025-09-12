@@ -16,6 +16,6 @@ MonoBehaviour:
   nome: Bufala
   prezzo: 3
   quantita: 7
-  sprite: {fileID: 21300000, guid: e33803f7c42c28649b2a941c8f9dd329, type: 3}
+  sprite: {fileID: 21300000, guid: 24cc9b97b7e90b942b36100d4cd76932, type: 3}
   layer: 4
-  singolo: 1
+  singolo: 0
