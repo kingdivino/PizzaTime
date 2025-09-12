@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 1
   nome: Salsa di Pomodoro
-  prezzo: 400
+  prezzo: 2
   quantita: 45
-  sprite: {fileID: 21300000, guid: 28ea29d44bd96dd45a4115e29f05758a, type: 3}
+  sprite: {fileID: 21300000, guid: d56c22f7215e76f4da38bfd66167b69e, type: 3}
   layer: 3
   singolo: 1

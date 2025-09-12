@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 5
   nome: Prosciutto Cotto
-  prezzo: 1
+  prezzo: 2
   quantita: 12
-  sprite: {fileID: 0}
-  layer: 2
-  singolo: 1
+  sprite: {fileID: 21300000, guid: 19e65e1d7f7a55847b8348884716f4dd, type: 3}
+  layer: 4
+  singolo: 0

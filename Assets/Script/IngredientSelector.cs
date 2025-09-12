@@ -44,7 +44,7 @@ public class IngredientSelector : MonoBehaviour
             if (toggleView != null)
             {
                 toggleView.nome.text = ingr.nome;
-                toggleView.prezzo.text = $"{ingr.prezzo:F2}�";
+                toggleView.prezzo.text = $"{ingr.prezzo:F2}€";
             }
 
             ingredientToggles.Add(newToggle);
@@ -53,69 +53,54 @@ public class IngredientSelector : MonoBehaviour
             if (toggleComp == null) continue;
 
             // Listener principale
-            toggleComp.onValueChanged.AddListener(isOn =>
-            {
-                if (suppressToggleCallbacks) return; // fallback guard
-
-                if (isOn)
-                {
-                    if (ingredientCount >= maxIngredients)
-                    {
-                        // disattiva il toggle senza richiamare il listener
-                        toggleComp.SetIsOnWithoutNotify(false);
-
-                        Debug.Log($"Hai raggiunto il massimo di {maxIngredients} ingredienti.");
-                        return;
-                    }
-
-                    // aggiungo solo se non � gi� presente
-                    //if (selectedIngredients.Add(ingr.nome))
-                    //{
-                    //    ingredientCount++;
-                    //    totale += ingr.prezzo;
-                    //    totale = Mathf.Max(0f, totale);
-                    //    UpdateTotaleText();
-                    //    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
-                    //}
-                    selectedIngredients.Add(ingr.nome);
-                    ingredientiSelezionati.Add(ingr);
-                    pizzaVisual.AddIngredient(ingrediente);
-                    
-                    ingredientCount++;
-                    totale += ingr.prezzo;
-                    totale = Mathf.Max(0f, totale);
-                    UpdateTotaleText();
-                    Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
-                    riepilogo.UpdateRiepilogo();
-                    
-                }
-                else // deselect
-                {
-                    // rimuovo solo se era stato realmente selezionato
-                    //if (selectedIngredients.Remove(ingr.nome))
-                    //{
-                    //    ingredientCount = Mathf.Max(0, ingredientCount - 1);
-                    //    totale -= ingr.prezzo;
-                    //    totale = Mathf.Max(0f, totale);
-                    //    UpdateTotaleText();
-                    //    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
-                    //}
-                    selectedIngredients.Remove(ingr.nome);
-                    ingredientiSelezionati.Remove(ingr);
-                    pizzaVisual.RemoveIngredient(ingrediente);
-                    
-                    ingredientCount = Mathf.Max(0, ingredientCount - 1);
-                    totale -= ingr.prezzo;
-                    totale = Mathf.Max(0f, totale);
-                    UpdateTotaleText();
-                    Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
-                    riepilogo.UpdateRiepilogo();
-                }
-            });
+            toggleComp.onValueChanged.AddListener((isOn) => OnIngredienteToggleChanged(isOn, ingr, ingrediente, toggleComp));
         }
 
         UpdateTotaleText();
     }
+
+// 🔹 Dichiarazione del metodo
+private void OnIngredienteToggleChanged(bool isOn, Ingrediente ingr, Ingrediente ingrediente, Toggle toggleComp)
+{
+    if (suppressToggleCallbacks) return; // fallback guard
+
+    if (isOn)
+    {
+        if (ingredientCount >= maxIngredients)
+        {
+            // disattiva il toggle senza richiamare il listener
+            toggleComp.SetIsOnWithoutNotify(false);
+
+            Debug.Log($"Hai raggiunto il massimo di {maxIngredients} ingredienti.");
+            return;
+        }
+
+        selectedIngredients.Add(ingr.nome);
+        ingredientiSelezionati.Add(ingr);
+        pizzaVisual.AddIngredient(ingrediente);
+
+        ingredientCount++;
+        totale += ingr.prezzo;
+        totale = Mathf.Max(0f, totale);
+        UpdateTotaleText();
+        Debug.Log($"Selezionato: {ingr.nome} - Tot: {ingredientCount}");
+        riepilogo.UpdateRiepilogo();
+    }
+    else // deselect
+    {
+        selectedIngredients.Remove(ingr.nome);
+        ingredientiSelezionati.Remove(ingr);
+        pizzaVisual.RemoveIngredient(ingrediente);
+
+        ingredientCount = Mathf.Max(0, ingredientCount - 1);
+        totale -= ingr.prezzo;
+        totale = Mathf.Max(0f, totale);
+        UpdateTotaleText();
+        Debug.Log($"Deselezionato: {ingr.nome} - Tot: {ingredientCount}");
+        riepilogo.UpdateRiepilogo();
+    }
+}
+
 
     private void UpdateTotaleText()
     {

@@ -51,13 +51,14 @@ public class Riepilogo : MonoBehaviour
 
         foreach (Ingrediente ingrediente in IngredientSelector.GetSelectedIngredients())
         {
+            //stampa gli ingredienti selezionati
             GameObject newcomp = Instantiate(componente, areaComponenti);
             newcomp.GetComponent<ComponentiReference>().nome.text = ingrediente.nome;
             newcomp.GetComponent<ComponentiReference>().prezzo.text = $"{ingrediente.prezzo:F2}€";
             listaComponenti.Add(newcomp);
         }
         if (inputField.text == "")
-            nome = "Baccal�";
+            nome = "Baccala";
         else
             nome = inputField.text;
         newPizza = ScriptableObject.CreateInstance<Pizza>();

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 4
   nome: Salame
-  prezzo: 1
-  quantita: 5
-  sprite: {fileID: 1622315888534751301, guid: b34494efa1821f642a58412e60a839bb, type: 3}
-  layer: 4
+  prezzo: 2
+  quantita: 0
+  sprite: {fileID: 21300000, guid: 44040b4a270c76a419e015d3085675a1, type: 3}
+  layer: 6
   singolo: 0

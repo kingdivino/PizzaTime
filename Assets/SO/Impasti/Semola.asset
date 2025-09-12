@@ -15,4 +15,4 @@ MonoBehaviour:
   id: 0
   nome: Semola
   prezzo: 1
-  sprite: {fileID: 21300000, guid: f7234b7ad1f3e65459d66b918f71386a, type: 3}
+  sprite: {fileID: 21300000, guid: 09602c3109875194fb9440793420e7fd, type: 3}
